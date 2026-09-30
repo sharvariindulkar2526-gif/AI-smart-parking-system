@@ -1,322 +1,433 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Smart Parking Prototype</title>
-  <style>
-    /* ==================== CSS STYLES ==================== */
-    :root {
-      --bg-dark: #0a0a0a;
-      --bg-card: #141414;
-      --bg-card-hover: #1f1f1f;
-      --border-color: #2a2a2a;
-      --text-primary: #ffffff;
-      --text-secondary: #a0a0a0;
-      --text-muted: #666666;
-      --radius-sm: 6px;
-      --radius-md: 12px;
-      --radius-full: 9999px;
-      --font-main: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-      --font-mono: "SF Mono", "Fira Code", monospace;
-    }
-
-    * { box-sizing: border-box; margin: 0; padding: 0; font-family: var(--font-main); }
-
-    body {
-      background-color: #000000;
-      color: var(--text-primary);
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      min-height: 100vh;
-      padding: 20px;
-    }
-
-    /* Mobile Prototype Frame */
-    .mobile-frame {
-      width: 100%;
-      max-width: 390px;
-      height: 844px;
-      background-color: var(--bg-dark);
-      border: 1px solid var(--border-color);
-      border-radius: 40px;
-      display: flex;
-      flex-direction: column;
-      overflow: hidden;
-      box-shadow: 0 20px 50px rgba(255, 255, 255, 0.05);
-    }
-
-    /* Status Bar */
-    .status-bar {
-      display: flex;
-      justify-content: space-between;
-      padding: 16px 24px 8px;
-      font-size: 0.8rem;
-      font-family: var(--font-mono);
-      color: var(--text-secondary);
-    }
-
-    /* Main Screen Content */
-    .screen-content {
-      flex: 1;
-      padding: 20px;
-      overflow-y: auto;
-      display: flex;
-      flex-direction: column;
-      gap: 16px;
-    }
-
-    .header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-    }
-
-    .header h1 {
-      font-size: 1.4rem;
-      font-weight: 700;
-    }
-
-    .tag-badge {
-      font-family: var(--font-mono);
-      font-size: 0.7rem;
-      padding: 4px 8px;
-      border: 1px solid var(--border-color);
-      border-radius: var(--radius-sm);
-      color: var(--text-secondary);
-    }
-
-    .card {
-      background-color: var(--bg-card);
-      border: 1px solid var(--border-color);
-      border-radius: var(--radius-md);
-      padding: 16px;
-    }
-
-    .card-title {
-      font-size: 0.95rem;
-      font-weight: 600;
-      margin-bottom: 6px;
-    }
-
-    .card-desc {
-      font-size: 0.82rem;
-      color: var(--text-secondary);
-      line-height: 1.4;
-    }
-
-    /* Metrics Grid */
-    .metric-grid {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 12px;
-    }
-
-    .metric-value {
-      font-family: var(--font-mono);
-      font-size: 1.5rem;
-      font-weight: 700;
-      margin-top: 4px;
-    }
-
-    .metric-label {
-      font-size: 0.7rem;
-      color: var(--text-muted);
-      text-transform: uppercase;
-    }
-
-    /* Interactive Slot Matrix */
-    .slot-grid {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 8px;
-      margin-top: 10px;
-    }
-
-    .slot-card {
-      border: 1px solid var(--border-color);
-      background: var(--bg-card);
-      padding: 12px 8px;
-      text-align: center;
-      border-radius: var(--radius-sm);
-      cursor: pointer;
-      transition: all 0.2s ease;
-    }
-
-    .slot-card.available {
-      border-color: #ffffff;
-      background-color: #1a1a1a;
-    }
-
-    .slot-card.occupied {
-      opacity: 0.3;
-      border-color: #333333;
-    }
-
-    .slot-name {
-      font-family: var(--font-mono);
-      font-weight: bold;
-      font-size: 0.9rem;
-    }
-
-    .slot-status {
-      font-size: 0.65rem;
-      color: var(--text-muted);
-      margin-top: 4px;
-      text-transform: uppercase;
-    }
-
-    .objective-list {
-      list-style: none;
-      display: flex;
-      flex-direction: column;
-      gap: 8px;
-      margin-top: 6px;
-    }
-
-    .objective-list li {
-      font-size: 0.8rem;
-      color: var(--text-secondary);
-      display: flex;
-      align-items: center;
-      gap: 6px;
-    }
-
-    .objective-list li::before {
-      content: "•";
-      color: #ffffff;
-    }
-
-    /* Navigation Bar */
-    .nav-bar {
-      display: flex;
-      justify-content: space-around;
-      padding: 16px 0 24px;
-      border-top: 1px solid var(--border-color);
-      font-family: var(--font-mono);
-      font-size: 0.7rem;
-      color: var(--text-muted);
-    }
-
-    .nav-item.active {
-      color: var(--text-primary);
-    }
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SmartPark - Smart Parking Finder</title>
+    <link rel="stylesheet" href="style.css">
 </head>
+
 <body>
 
-  <!-- Mobile Frame Container -->
-  <div class="mobile-frame">
-    
-    <!-- Status Bar -->
-    <header class="status-bar">
-      <span>09:41</span>
-      <span>PARK_PROTOTYPE</span>
+<!-- ================= LOGIN ================= -->
+<div id="loginPage" class="auth-page">
+
+    <div class="auth-box">
+
+        <div class="logo">🅿️ SmartPark</div>
+
+        <h2>Welcome Back</h2>
+        <p>Find and reserve your parking easily.</p>
+
+        <form id="loginForm">
+
+            <input
+                type="email"
+                id="loginEmail"
+                placeholder="Email"
+                required
+            >
+
+            <input
+                type="password"
+                id="loginPassword"
+                placeholder="Password"
+                required
+            >
+
+            <button type="submit">Login</button>
+
+        </form>
+
+        <p class="switch-text">
+            Don't have an account?
+            <span onclick="showSignup()">Create Account</span>
+        </p>
+
+        <p class="demo">
+            Demo Login: demo@smartpark.com / 123456
+        </p>
+
+    </div>
+
+</div>
+
+
+<!-- ================= SIGNUP ================= -->
+<div id="signupPage" class="auth-page hidden">
+
+    <div class="auth-box">
+
+        <div class="logo">🅿️ SmartPark</div>
+
+        <h2>Create Account</h2>
+
+        <form id="signupForm">
+
+            <input
+                type="text"
+                id="signupName"
+                placeholder="Full Name"
+                required
+            >
+
+            <input
+                type="email"
+                id="signupEmail"
+                placeholder="Email"
+                required
+            >
+
+            <input
+                type="password"
+                id="signupPassword"
+                placeholder="Password (minimum 6 characters)"
+                required
+            >
+
+            <button type="submit">Create Account</button>
+
+        </form>
+
+        <p class="switch-text">
+            Already have an account?
+            <span onclick="showLogin()">Login</span>
+        </p>
+
+    </div>
+
+</div>
+
+
+<!-- ================= MAIN APP ================= -->
+<div id="appPage" class="hidden">
+
+    <header>
+
+        <div class="header-logo">
+            🅿️ SmartPark
+        </div>
+
+        <button class="logout-btn" onclick="logout()">
+            Logout
+        </button>
+
     </header>
 
-    <!-- Main Content -->
-    <main class="screen-content">
-      
-      <div class="header">
-        <h1>Smart Parking</h1>
-        <span class="tag-badge">LIVE DEMO</span>
-      </div>
 
-      <!-- Problem Statement Card -->
-      <section class="card">
-        <h2 class="card-title">Problem Statement</h2>
-        <p class="card-desc">
-          Drivers waste time and fuel searching for open parking spots, leading to urban congestion and high carbon emissions.
-        </p>
-      </section>
+    <!-- ================= VEHICLE ================= -->
+    <section id="vehiclePage" class="page active">
 
-      <!-- Dynamic Metrics -->
-      <div class="metric-grid">
-        <div class="card">
-          <span class="metric-label">Open Slots</span>
-          <div class="metric-value" id="avail-count">0/6</div>
+        <div class="container">
+
+            <h1>Vehicle Details</h1>
+
+            <p>Enter your vehicle information.</p>
+
+            <div class="form-card">
+
+                <input
+                    type="text"
+                    id="carNumber"
+                    placeholder="Vehicle Number (e.g. MH12AB1234)"
+                    required
+                >
+
+                <input
+                    type="text"
+                    id="carModel"
+                    placeholder="Vehicle Model (e.g. Hyundai i20)"
+                    required
+                >
+
+                <select id="vehicleType">
+
+                    <option value="">
+                        Select Vehicle Type
+                    </option>
+
+                    <option value="Car">
+                        Car
+                    </option>
+
+                    <option value="Bike">
+                        Bike
+                    </option>
+
+                    <option value="SUV">
+                        SUV
+                    </option>
+
+                </select>
+
+                <button onclick="saveVehicle()">
+                    Continue
+                </button>
+
+            </div>
+
         </div>
-        <div class="card">
-          <span class="metric-label">Time Saved</span>
-          <div class="metric-value">~18m</div>
+
+    </section>
+
+
+    <!-- ================= LOCATION ================= -->
+    <section id="locationPage" class="page">
+
+        <div class="container">
+
+            <h1>Select Location</h1>
+
+            <p>
+                Choose where you want to find parking.
+            </p>
+
+            <button
+                class="current-location-btn"
+                onclick="useCurrentLocation()"
+            >
+                📍 Use Current Location
+            </button>
+
+            <p id="currentLocationStatus"></p>
+
+
+            <div class="location-buttons">
+
+                <button onclick="selectLocation('City')">
+                    📍 City Area
+                </button>
+
+                <button onclick="selectLocation('College')">
+                    🎓 College Area
+                </button>
+
+                <button onclick="selectLocation('Market')">
+                    🛍️ Market Area
+                </button>
+
+                <button onclick="selectLocation('Mall')">
+                    🏢 Mall Area
+                </button>
+
+            </div>
+
         </div>
-      </div>
 
-      <!-- Interactive Parking Slots -->
-      <section class="card">
-        <h2 class="card-title">Live Slot Matrix</h2>
-        <p class="card-desc" style="font-size: 0.75rem;">Click any slot to toggle Availability / Reservation:</p>
-        <div class="slot-grid" id="slot-grid">
-          <!-- Slots rendering dynamically via JS -->
+    </section>
+
+
+    <!-- ================= PARKING ================= -->
+    <section id="parkingPage" class="page">
+
+        <div class="container">
+
+            <h1>Available Parking</h1>
+
+            <p id="selectedLocationText"></p>
+
+            <div
+                id="parkingList"
+                class="parking-grid"
+            ></div>
+
         </div>
-      </section>
 
-      <!-- Objectives -->
-      <section class="card">
-        <h2 class="card-title">Core Objectives</h2>
-        <ul class="objective-list">
-          <li>Real-time availability tracking</li>
-          <li>Reduce fuel and time consumption</li>
-          <li>Lower carbon footprint & traffic</li>
-        </ul>
-      </section>
+    </section>
 
-    </main>
 
-    <!-- Bottom Navigation -->
-    <nav class="nav-bar">
-      <span class="nav-item active">OVERVIEW</span>
-      <span class="nav-item">SLOTS</span>
-      <span class="nav-item">INFO</span>
-    </nav>
+    <!-- ================= SLOT ================= -->
+    <section id="slotPage" class="page">
 
-  </div>
+        <div class="container">
 
-  <!-- JavaScript Prototype State Engine -->
-  <script>
-    // Prototype Mock Data
-    const slots = [
-      { id: 'A1', status: 'AVAILABLE' },
-      { id: 'A2', status: 'OCCUPIED' },
-      { id: 'A3', status: 'AVAILABLE' },
-      { id: 'B1', status: 'AVAILABLE' },
-      { id: 'B2', status: 'OCCUPIED' },
-      { id: 'B3', status: 'AVAILABLE' }
-    ];
+            <h1>Select Parking Slot</h1>
 
-    function renderSlots() {
-      const grid = document.getElementById('slot-grid');
-      grid.innerHTML = '';
+            <p id="selectedParkingText"></p>
 
-      let availableCount = 0;
+            <div
+                id="slotList"
+                class="slot-grid"
+            ></div>
 
-      slots.forEach((slot, index) => {
-        if (slot.status === 'AVAILABLE') availableCount++;
+            <button onclick="goToDuration()">
+                Continue
+            </button>
 
-        const div = document.createElement('div');
-        const isAvail = slot.status === 'AVAILABLE';
-        div.className = `slot-card ${isAvail ? 'available' : 'occupied'}`;
-        div.innerHTML = `
-          <div class="slot-name">${slot.id}</div>
-          <div class="slot-status">${slot.status}</div>
-        `;
+        </div>
 
-        // Click interaction to toggle state
-        div.onclick = () => {
-          slots[index].status = isAvail ? 'OCCUPIED' : 'AVAILABLE';
-          renderSlots();
-        };
+    </section>
 
-        grid.appendChild(div);
-      });
 
-      // Update Open Slots Count
-      document.getElementById('avail-count').innerText = `${availableCount}/${slots.length}`;
-    }
+    <!-- ================= DURATION ================= -->
+    <section id="durationPage" class="page">
 
-    // Initial render
-    renderSlots();
-  </script>
+        <div class="container">
+
+            <h1>Select Parking Duration</h1>
+
+            <p>
+                Choose how long you want to park.
+            </p>
+
+            <div class="duration-grid">
+
+                <button onclick="selectDuration(3)">
+                    3 Hours
+                </button>
+
+                <button onclick="selectDuration(5)">
+                    5 Hours
+                </button>
+
+                <button onclick="selectDuration(7)">
+                    7 Hours
+                </button>
+
+                <button onclick="selectDuration(12)">
+                    12 Hours
+                </button>
+
+                <button onclick="selectDuration(24)">
+                    24 Hours
+                </button>
+
+            </div>
+
+        </div>
+
+    </section>
+
+
+    <!-- ================= PAYMENT ================= -->
+    <section id="paymentPage" class="page">
+
+        <div class="container">
+
+            <h1>Payment</h1>
+
+            <div
+                id="paymentAmount"
+                class="payment-box"
+            ></div>
+
+
+            <div id="paymentOptions">
+
+                <h3>Select Payment Method</h3>
+
+                <div class="payment-methods">
+
+                    <button onclick="selectPayment('UPI')">
+                        📱 UPI
+                    </button>
+
+                    <button onclick="selectPayment('Card')">
+                        💳 Card
+                    </button>
+
+                    <button onclick="selectPayment('Cash')">
+                        💵 Cash
+                    </button>
+
+                </div>
+
+                <button onclick="confirmPayment()">
+                    Confirm Payment
+                </button>
+
+            </div>
+
+
+            <div
+                id="freeParkingBox"
+                class="hidden"
+            >
+
+                <button onclick="confirmFreeParking()">
+                    Confirm Free Parking
+                </button>
+
+            </div>
+
+        </div>
+
+    </section>
+
+
+    <!-- ================= CONFIRMATION ================= -->
+    <section id="confirmationPage" class="page">
+
+        <div class="container">
+
+            <div class="confirmation-box">
+
+                <div class="success-icon">
+                    ✓
+                </div>
+
+                <h1>
+                    Booking Confirmed!
+                </h1>
+
+                <div id="bookingDetails"></div>
+
+                <button onclick="goToNavigation()">
+                    🧭 Start Navigation
+                </button>
+
+            </div>
+
+        </div>
+
+    </section>
+
+
+    <!-- ================= NAVIGATION ================= -->
+    <section id="navigationPage" class="page">
+
+        <div class="container">
+
+            <div class="navigation-box">
+
+                <div class="navigation-icon">
+                    🧭
+                </div>
+
+                <h1>
+                    Navigation
+                </h1>
+
+                <p id="navigationText"></p>
+
+                <div class="route">
+
+                    📍 Your Location
+
+                    <span>↓</span>
+
+                    🅿️ Parking Location
+
+                </div>
+
+                <button onclick="openMaps()">
+                    🗺️ Open Google Maps
+                </button>
+
+                <button onclick="newSearch()">
+                    New Parking Search
+                </button>
+
+            </div>
+
+        </div>
+
+    </section>
+
+</div>
+
+
+<script src="script.js"></script>
+
 </body>
 </html>

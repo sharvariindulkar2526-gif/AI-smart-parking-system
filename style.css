@@ -1,0 +1,629 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: Arial, sans-serif;
+    background: linear-gradient(
+        135deg,
+        #e8f5f1,
+        #e8f0ff
+    );
+    color: #263238;
+}
+
+.hidden {
+    display: none !important;
+}
+
+
+/* ================= AUTH ================= */
+
+.auth-page {
+    min-height: 100vh;
+
+    display: flex;
+    justify-content: center;
+    align-items: center;
+
+    padding: 20px;
+}
+
+.auth-box {
+    width: 100%;
+    max-width: 420px;
+
+    background: white;
+
+    padding: 35px;
+
+    border-radius: 20px;
+
+    box-shadow:
+        0 10px 35px rgba(0,0,0,0.12);
+
+    text-align: center;
+}
+
+.logo {
+    font-size: 30px;
+
+    font-weight: bold;
+
+    color: #087f5b;
+
+    margin-bottom: 15px;
+}
+
+.auth-box h2 {
+    margin-bottom: 10px;
+}
+
+.auth-box p {
+    color: #667;
+    margin-bottom: 20px;
+}
+
+.auth-box input,
+.form-card input,
+.form-card select {
+
+    width: 100%;
+
+    padding: 14px;
+
+    margin: 8px 0;
+
+    border:
+        1px solid #ccd5d9;
+
+    border-radius: 10px;
+
+    font-size: 15px;
+}
+
+button {
+
+    border: none;
+
+    padding: 13px 20px;
+
+    border-radius: 10px;
+
+    background: #087f5b;
+
+    color: white;
+
+    font-size: 15px;
+
+    cursor: pointer;
+
+    transition: 0.2s;
+}
+
+button:hover {
+
+    background: #056b4c;
+
+    transform: translateY(-1px);
+}
+
+.auth-box button {
+
+    width: 100%;
+
+    margin-top: 10px;
+}
+
+.switch-text span {
+
+    color: #087f5b;
+
+    font-weight: bold;
+
+    cursor: pointer;
+}
+
+.demo {
+
+    font-size: 12px;
+}
+
+
+/* ================= HEADER ================= */
+
+header {
+
+    background: white;
+
+    padding: 15px 5%;
+
+    display: flex;
+
+    justify-content: space-between;
+
+    align-items: center;
+
+    box-shadow:
+        0 3px 12px rgba(0,0,0,0.08);
+}
+
+.header-logo {
+
+    font-size: 25px;
+
+    font-weight: bold;
+
+    color: #087f5b;
+}
+
+.logout-btn {
+
+    background: #e63946;
+}
+
+
+/* ================= PAGES ================= */
+
+.page {
+
+    display: none;
+
+    min-height:
+        calc(100vh - 70px);
+
+    padding: 45px 20px;
+}
+
+.page.active {
+
+    display: block;
+}
+
+.container {
+
+    width: 100%;
+
+    max-width: 900px;
+
+    margin: auto;
+
+    text-align: center;
+}
+
+.container h1 {
+
+    margin-bottom: 10px;
+}
+
+.container > p {
+
+    color: #667;
+
+    margin-bottom: 30px;
+}
+
+
+/* ================= FORM ================= */
+
+.form-card {
+
+    max-width: 500px;
+
+    margin: auto;
+
+    background: white;
+
+    padding: 30px;
+
+    border-radius: 18px;
+
+    box-shadow:
+        0 8px 25px rgba(0,0,0,0.08);
+}
+
+.form-card button {
+
+    width: 100%;
+
+    margin-top: 15px;
+}
+
+
+/* ================= CURRENT LOCATION ================= */
+
+.current-location-btn {
+
+    background: #1565c0;
+
+    margin-bottom: 15px;
+
+    padding: 15px 25px;
+}
+
+.current-location-btn:hover {
+
+    background: #0d47a1;
+}
+
+#currentLocationStatus {
+
+    margin-bottom: 25px;
+
+    font-weight: bold;
+}
+
+
+/* ================= LOCATION ================= */
+
+.location-buttons {
+
+    display: grid;
+
+    grid-template-columns:
+        repeat(2, 1fr);
+
+    gap: 20px;
+
+    max-width: 600px;
+
+    margin: auto;
+}
+
+.location-buttons button {
+
+    background: white;
+
+    color: #263238;
+
+    padding: 25px;
+
+    border:
+        2px solid #dce8e4;
+
+    font-size: 17px;
+}
+
+.location-buttons button:hover {
+
+    background: #087f5b;
+
+    color: white;
+}
+
+
+/* ================= PARKING ================= */
+
+.parking-grid {
+
+    display: grid;
+
+    grid-template-columns:
+        repeat(2, 1fr);
+
+    gap: 20px;
+}
+
+.parking-card {
+
+    background: white;
+
+    padding: 25px;
+
+    border-radius: 18px;
+
+    text-align: left;
+
+    box-shadow:
+        0 6px 20px rgba(0,0,0,0.08);
+}
+
+.parking-card h3 {
+
+    margin-bottom: 12px;
+}
+
+.parking-card p {
+
+    margin: 8px 0;
+
+    color: #667;
+}
+
+.free-badge {
+
+    display: inline-block;
+
+    padding: 5px 10px;
+
+    background: #d8f3dc;
+
+    color: #16803c;
+
+    border-radius: 20px;
+
+    font-weight: bold;
+}
+
+.paid-badge {
+
+    display: inline-block;
+
+    padding: 5px 10px;
+
+    background: #fff3cd;
+
+    color: #9a6700;
+
+    border-radius: 20px;
+
+    font-weight: bold;
+}
+
+
+/* ================= SLOTS ================= */
+
+.slot-grid {
+
+    display: grid;
+
+    grid-template-columns:
+        repeat(5, 1fr);
+
+    gap: 12px;
+
+    margin: 30px 0;
+}
+
+.slot {
+
+    padding: 18px 5px;
+
+    border-radius: 10px;
+
+    background: #d8f3dc;
+
+    color: #176b38;
+
+    font-weight: bold;
+
+    cursor: pointer;
+}
+
+.slot.occupied {
+
+    background: #ffc9c9;
+
+    color: #b42318;
+
+    cursor: not-allowed;
+}
+
+.slot.selected {
+
+    background: #087f5b;
+
+    color: white;
+}
+
+
+/* ================= DURATION ================= */
+
+.duration-grid {
+
+    display: grid;
+
+    grid-template-columns:
+        repeat(3, 1fr);
+
+    gap: 15px;
+
+    max-width: 650px;
+
+    margin: auto;
+}
+
+.duration-grid button {
+
+    background: white;
+
+    color: #087f5b;
+
+    border:
+        2px solid #087f5b;
+
+    padding: 25px;
+}
+
+.duration-grid button:hover {
+
+    background: #087f5b;
+
+    color: white;
+}
+
+
+/* ================= PAYMENT ================= */
+
+.payment-box {
+
+    background: white;
+
+    padding: 25px;
+
+    border-radius: 18px;
+
+    max-width: 500px;
+
+    margin:
+        0 auto 25px;
+
+    box-shadow:
+        0 6px 20px rgba(0,0,0,0.08);
+}
+
+.payment-box h2 {
+
+    color: #087f5b;
+
+    margin-bottom: 10px;
+}
+
+.payment-methods {
+
+    display: flex;
+
+    justify-content: center;
+
+    gap: 15px;
+
+    margin: 20px 0;
+
+    flex-wrap: wrap;
+}
+
+.payment-methods button {
+
+    background: white;
+
+    color: #263238;
+
+    border:
+        1px solid #ccd5d9;
+}
+
+.payment-methods button.selected {
+
+    background: #087f5b;
+
+    color: white;
+}
+
+
+/* ================= CONFIRMATION ================= */
+
+.confirmation-box,
+.navigation-box {
+
+    max-width: 600px;
+
+    margin: auto;
+
+    background: white;
+
+    padding: 40px;
+
+    border-radius: 20px;
+
+    box-shadow:
+        0 8px 25px rgba(0,0,0,0.08);
+}
+
+.success-icon {
+
+    width: 70px;
+
+    height: 70px;
+
+    border-radius: 50%;
+
+    background: #d8f3dc;
+
+    color: #16803c;
+
+    display: flex;
+
+    justify-content: center;
+
+    align-items: center;
+
+    font-size: 40px;
+
+    margin:
+        auto auto 20px;
+}
+
+#bookingDetails {
+
+    background: #f5f8f7;
+
+    padding: 20px;
+
+    border-radius: 12px;
+
+    text-align: left;
+
+    margin: 25px 0;
+
+    line-height: 1.8;
+}
+
+
+/* ================= NAVIGATION ================= */
+
+.navigation-icon {
+
+    font-size: 55px;
+
+    margin-bottom: 15px;
+}
+
+.route {
+
+    background: #f5f8f7;
+
+    padding: 25px;
+
+    border-radius: 15px;
+
+    margin: 25px 0;
+
+    font-size: 18px;
+}
+
+.route span {
+
+    display: block;
+
+    margin: 10px;
+}
+
+.navigation-box button {
+
+    margin: 5px;
+}
+
+
+/* ================= MOBILE ================= */
+
+@media (max-width: 700px) {
+
+    .parking-grid {
+
+        grid-template-columns: 1fr;
+    }
+
+    .location-buttons {
+
+        grid-template-columns: 1fr;
+    }
+
+    .duration-grid {
+
+        grid-template-columns:
+            1fr 1fr;
+    }
+
+    .slot-grid {
+
+        grid-template-columns:
+            repeat(3, 1fr);
+    }
+
+    .auth-box {
+
+        padding: 25px;
+    }
+}
