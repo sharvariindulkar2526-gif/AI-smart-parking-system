@@ -1,0 +1,91 @@
+/* SmartPark - bright, colourful theme (loads AFTER style.css) */
+:root {
+    --bg: #f3f7ff; --ink: #1d2447; --muted: #5a6588; --line: rgba(40, 60, 130, .14);
+    --green: #12b76a; --cyan: #2f8bff; --pink: #ff5c93; --amber: #ff9f1c; --red: #ef476f;
+}
+body { background: var(--bg); }
+h1, h2, h3, .logo, .header-logo { font-family: 'Rajdhani', 'Segoe UI', sans-serif; letter-spacing: 0; font-weight: 700; }
+
+/* background: sunny sky, soft clouds, grass */
+#bg { background: linear-gradient(#8fd3ff 0%, #d4efff 45%, #fff1d6 72%, #ffd6e0 100%); }
+#bg .stars { display: none; }
+.o1 { background: #ffd166; opacity: .55; }
+.o2 { background: #ff8fb1; opacity: .45; }
+.sky-layer i { background-color: #9db4ee;
+    background-image: repeating-linear-gradient(0deg, rgba(255,255,255,.55) 0 3px, transparent 3px 14px),
+                      repeating-linear-gradient(90deg, transparent 0 8px, rgba(60,80,160,.25) 8px 11px); }
+.sky-layer.far i { background-color: #c3d2f7; }
+.floor { background:
+    repeating-linear-gradient(90deg, rgba(255,255,255,.55) 0 2px, transparent 2px 90px),
+    repeating-linear-gradient(0deg, rgba(255,255,255,.55) 0 2px, transparent 2px 90px),
+    linear-gradient(#6fd08c, #3fa968); }
+.vignette { background: radial-gradient(ellipse at 50% 40%, transparent 55%, rgba(255,255,255,.35)); }
+
+/* cards, buttons, inputs */
+.glass { background: rgba(255,255,255,.82); border: 1px solid var(--line);
+    box-shadow: 0 14px 40px rgba(60,80,160,.18), inset 0 1px 0 #fff; }
+.btn { color: #fff; background: linear-gradient(135deg, #12b76a, #2f8bff); box-shadow: 0 8px 20px rgba(47,139,255,.3), inset 0 -3px 0 rgba(0,0,0,.12); }
+.btn:hover { box-shadow: 0 12px 28px rgba(47,139,255,.4); }
+.btn.ghost { background: #fff; color: var(--ink); }
+.btn.blue { background: linear-gradient(135deg, #6c5ce7, #2f8bff); }
+.btn.danger { background: linear-gradient(135deg, #ef476f, #ff9f1c); }
+.link { color: #2f6bff; }
+.field input { color: var(--ink); background: #fff; }
+.field input::placeholder { color: #8f9ac0; }
+.field input:focus { border-color: #2f8bff; box-shadow: 0 0 0 3px rgba(47,139,255,.2); }
+.page-title { text-shadow: none; background: linear-gradient(90deg, #12b76a, #2f8bff, #ff5c93); -webkit-background-clip: text; background-clip: text; color: transparent; }
+.logo, .header-logo { color: #12a35f; text-shadow: none; }
+.hero-copy h1 span { background: linear-gradient(90deg, #12b76a, #2f8bff, #ff5c93); -webkit-background-clip: text; background-clip: text; color: transparent; }
+header { background: rgba(255,255,255,.8); }
+.user-pill, .chips span, .pill { background: #fff; color: var(--ink); }
+.pill.g { color: #0e9a58; } .pill.r { color: #d62f58; } .pill.c { color: #2273e6; }
+.toast { background: #fff; color: var(--ink); }
+.toast.ok { color: #0e9a58; } .toast.warn { color: #c77700; } .toast.err { color: #d62f58; }
+.steps .st { color: #8a95b8; }
+.steps .st.now { color: var(--ink); }
+.steps .st b { background: #fff; }
+.steps .st.done b, .steps .st.now b { color: #fff; }
+.steps .st.now b { background: #2f8bff; box-shadow: 0 0 10px rgba(47,139,255,.6); }
+.steps .st.done b { background: #12b76a; }
+
+/* colourful tiles */
+.chip { background: #fff; color: var(--ink); }
+.chip.on { background: #e3f6ec; border-color: #12b76a; box-shadow: none; }
+.showroom { background: radial-gradient(ellipse at 50% 85%, rgba(255,159,28,.3), transparent 60%), linear-gradient(#bfe6ff, #fdeedd); }
+.showroom-tag { background: #fff; }
+.platform { background: radial-gradient(circle, rgba(255,92,147,.25) 0 32%, transparent 33%),
+    repeating-radial-gradient(circle, rgba(47,139,255,.4) 0 2px, transparent 2px 22px),
+    conic-gradient(rgba(18,183,106,.0), rgba(18,183,106,.5), rgba(255,159,28,.0) 55%, rgba(255,92,147,.5), rgba(18,183,106,0)); box-shadow: none; }
+.loc-card:nth-child(1) .mini { background: linear-gradient(#cfe5ff, #eaf4ff); }
+.loc-card:nth-child(2) .mini { background: linear-gradient(#e6dcff, #f5f0ff); }
+.loc-card:nth-child(3) .mini { background: linear-gradient(#ffe7c2, #fff5e3); }
+.loc-card:nth-child(4) .mini { background: linear-gradient(#ffd3e0, #fff0f4); }
+.loc-name { font-family: 'Rajdhani', sans-serif; font-weight: 700; }
+.p-sign { background: linear-gradient(135deg, #6c5ce7, #2f8bff); }
+.meter { background: #e3e8f7; }
+.free-badge { background: #e3f6ec; color: #0e9a58; border-color: #12b76a; }
+.paid-badge { background: #fff1d9; color: #c77700; border-color: #ff9f1c; }
+.lot { background: linear-gradient(#5d6785, #475070); border-color: #8d98bd; }
+.dur-ring span { background: #fff; font-family: 'Rajdhani', sans-serif; }
+.dur-price { color: #e08400; }
+.pay-tile.selected { background: #e3f6ec; border-color: #12b76a; box-shadow: none; }
+#bookingDetails, .hud-cell { background: #f6f9ff; border-color: var(--line); }
+.hud-cell b { color: #2273e6; }
+.barcode i { background: #1d2447; }
+
+/* daytime road scene */
+.road-scene { background: linear-gradient(#4fb8ff 0%, #bfe8ff 30%, #ffe0a8 37.5%, #5cc47a 38.3%, #3fa968 100%); }
+.rs-sky { display: none; }
+.rs-road { background-color: #4a5168; }
+.rs-fog { background: radial-gradient(ellipse 55% 26% at 50% 38%, rgba(255,230,170,.8), transparent 100%); }
+
+/* ---------- welcome animation ---------- */
+#welcome { position: fixed; inset: 0; z-index: 200; overflow: hidden; cursor: pointer;
+    transition: transform .9s cubic-bezier(.7,0,.3,1), opacity .9s; }
+#welcome .road-scene { position: absolute; inset: 0; height: 100%; border-radius: 0; box-shadow: none; }
+#welcome .w-text { position: absolute; left: 0; right: 0; top: 13%; text-align: center; color: #fff;
+    text-shadow: 0 4px 18px rgba(20,40,120,.45); animation: wIn 1s .5s cubic-bezier(.2,.9,.3,1.2) both; }
+#welcome .w-text h1 { font-size: clamp(34px, 7vw, 72px); }
+#welcome .w-text p { font-size: clamp(18px, 3vw, 26px); font-weight: 700; }
+#welcome.leaving { transform: scale(1.6); opacity: 0; pointer-events: none; }
+@keyframes wIn { from { opacity: 0; transform: translateY(-40px) scale(.8); } }
