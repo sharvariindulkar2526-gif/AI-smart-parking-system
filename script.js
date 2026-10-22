@@ -176,6 +176,41 @@ document.querySelectorAll(".opts").forEach(group => {
 
 document.querySelectorAll("[data-back]").forEach(b => b.onclick = () => show(b.dataset.back));
 
+/* ---------- current location ---------- */
+function locStatus(text, cls) {
+  const s = $("locStatus");
+  s.textContent = text;
+  s.className = "loc-status" + (cls ? " " + cls : "");
+}
+
+async function placeName(lat, lng) {
+  try {
+    const r = await fetch(`https://nominatim.openstreetmap.org/reverse?format=jsonv2&zoom=16&lat=${lat}&lon=${lng}`);
+    const d = await r.json();
+    const a = d.address || {};
+    return [a.suburb || a.neighbourhood || a.road, a.city || a.town || a.village || a.state_district].filter(Boolean).join(", ") || d.display_name;
+  } catch (e) { return null; }
+}
+
+$("locBtn").onclick = () => {
+  if (!navigator.geolocation) { locStatus("Location isn't supported on this browser.", "bad"); return; }
+  const btn = $("locBtn");
+  btn.disabled = true;
+  locStatus("Getting your location…");
+  navigator.geolocation.getCurrentPosition(async pos => {
+    const lat = pos.coords.latitude, lng = pos.coords.longitude;
+    const name = await placeName(lat, lng);
+    state.loc = { lat, lng, label: name || `${lat.toFixed(4)}, ${lng.toFixed(4)}` };
+    btn.disabled = false;
+    btn.textContent = "📍 Update location";
+    locStatus("Location set: " + state.loc.label, "ok");
+  }, err => {
+    btn.disabled = false;
+    state.loc = null;
+    locStatus(err.code === 1 ? "Permission denied. Allow location in your browser settings." : "Couldn't get your location. Try again.", "bad");
+  }, { enableHighAccuracy: true, timeout: 10000, maximumAge: 60000 });
+};
+
 /* ---------- slots ---------- */
 function renderGrid() {
   $("areaTitle").textContent = state.area + " · pick a slot";
@@ -216,8 +251,13 @@ $("book").onclick = () => {
     `<div class="row"><span>Slot</span><b>${state.slot}</b></div>
      <div class="row"><span>Area</span><b>${state.area}</b></div>
      <div class="row"><span>Vehicle</span><b>${state.vehicle}</b></div>
+     ${state.loc ? `<div class="row"><span>From</span><b>${state.loc.label}</b></div>` : ""}
      <div class="row total"><span>Paid</span><span>₹${total()}</span></div>`;
-  $("maps").href = "https://www.google.com/maps/search/?api=1&query=" + encodeURIComponent("parking " + state.area);
+  const dest = encodeURIComponent("parking " + state.area);
+  $("maps").href = state.loc
+    ? `https://www.google.com/maps/dir/?api=1&origin=${state.loc.lat},${state.loc.lng}&destination=${dest}`
+    : `https://www.google.com/maps/search/?api=1&query=${dest}`;
+  $("maps").textContent = state.loc ? "Get directions" : "Open in Google Maps";
   show("s4");
 };
 
