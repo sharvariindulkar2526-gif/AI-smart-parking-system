@@ -1,555 +1,1126 @@
 /* =====================================================
-   SMARTPARK 3D  -  pure CSS 3D (no libraries)
+   SMARTPARK 3D - JAVASCRIPT
+   Pure CSS-3D models are generated here (no libraries).
 ===================================================== */
 
-:root {
-    --bg: #060a18;
-    --ink: #eaf2ff;
-    --muted: #9fb0cf;
-    --line: rgba(255, 255, 255, 0.14);
-    --green: #00f5a0;
-    --cyan: #00d9ff;
-    --pink: #ff3cac;
-    --amber: #ffc53d;
-    --red: #ff4d6d;
+
+/* ================= HELPERS ================= */
+
+const $ = (id) => document.getElementById(id);
+
+function esc(s) {
+    return String(s).replace(/[&<>"']/g, (c) => ({
+        "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;"
+    }[c]));
 }
 
-* { margin: 0; padding: 0; box-sizing: border-box; }
-
-html { scroll-behavior: smooth; }
-
-body {
-    font-family: 'Rajdhani', 'Segoe UI', system-ui, sans-serif;
-    font-size: 17px;
-    font-weight: 500;
-    color: var(--ink);
-    background: var(--bg);
-    min-height: 100vh;
-    overflow-x: hidden;
+function toast(message, kind) {
+    const box = $("toasts");
+    const el = document.createElement("div");
+    el.className = "toast " + (kind || "");
+    el.textContent = message;
+    box.appendChild(el);
+    setTimeout(() => {
+        el.classList.add("out");
+        setTimeout(() => el.remove(), 320);
+    }, 3000);
 }
 
-h1, h2, h3, .logo, .header-logo { font-family: 'Orbitron', 'Rajdhani', sans-serif; letter-spacing: .5px; }
+function store(key, value) {
+    try { localStorage.setItem(key, JSON.stringify(value)); } catch (e) { /* ignore */ }
+}
 
-.hidden { display: none !important; }
+function load(key, storage) {
+    try { return JSON.parse((storage || localStorage).getItem(key)); } catch (e) { return null; }
+}
+
+
+/* ================= VARIABLES ================= */
+
+let currentUser = null;
+
+const COLORS = ["#00f5a0", "#00d9ff", "#ff3cac", "#ffc53d", "#ff6b35", "#7c5cff", "#e8ecf5", "#ff3b4e"];
+
+let vehicle = { number: "", model: "", type: "Car", color: "#00d9ff" };
+
+let selectedLocation = "";
+let selectedParking = null;
+let selectedSlot = null;
+let selectedDuration = 0;
+let selectedPayment = "";
+let currentLatitude = null;
+let currentLongitude = null;
+let pageHistory = [];
+let currentPageId = "vehiclePage";
+let navTimer = null;
+let bookingId = "";
+
 
 /* =====================================================
-   ANIMATED BACKGROUND
+   3D ENGINE - boxes, wheels, vehicles
 ===================================================== */
 
-#bg {
-    position: fixed; inset: 0; z-index: -1; overflow: hidden;
-    perspective: 420px;
-    background: linear-gradient(#050816 0%, #0d1235 45%, #241049 72%, #4a1a62 100%);
+/* one 3D box (6 faces). x/y/z = centre, y is DOWN (ground = 0, up = negative) */
+function bx(w, h, d, x, y, z, cls, extra, face, txt) {
+
+    const f = { f: "", b: "", l: "", r: "", t: "", u: "" };
+
+    if (face) { f[face] = txt || ""; }
+
+    return `<div class="box ${cls || ""}" style="--w:${w};--h:${h};--d:${d};--x:${x};--y:${y};--z:${z};${extra || ""}">` +
+        `<i class="f">${f.f}</i><i class="b">${f.b}</i><i class="l"></i><i class="r"></i><i class="t"></i><i class="u"></i></div>`;
 }
 
-#bg .stars {
-    position: absolute; inset: 0 0 40% 0; opacity: .8;
-    background-image:
-        radial-gradient(1.5px 1.5px at 20px 30px, #fff, transparent),
-        radial-gradient(1px 1px at 90px 80px, #cfe, transparent),
-        radial-gradient(1.5px 1.5px at 150px 20px, #fff, transparent),
-        radial-gradient(1px 1px at 60px 140px, #fff, transparent);
-    background-size: 200px 180px;
-    animation: twinkle 4s ease-in-out infinite alternate;
-}
-@keyframes twinkle { to { opacity: .35; } }
+/* a wheel = stack of discs that spins around the X axis */
+function wheel(x, y, z, size, half) {
 
-.orb { position: absolute; border-radius: 50%; filter: blur(70px); animation: floatOrb 14s ease-in-out infinite alternate; }
-.o1 { width: 380px; height: 380px; background: var(--green); left: -120px; top: 10%; opacity: .2; }
-.o2 { width: 460px; height: 460px; background: #7c5cff; right: -160px; top: 0; opacity: .3; animation-delay: -6s; }
-@keyframes floatOrb { to { transform: translate(60px, 40px); } }
+    let discs = "";
 
-.sky-layer {
-    position: absolute; left: 0; bottom: 33%;
-    display: flex; align-items: flex-end; width: max-content;
-    animation: skyScroll 90s linear infinite;
-}
-.sky-layer.far { bottom: 35%; opacity: .55; animation-duration: 150s; }
-.sky-layer i {
-    display: block; flex: none; margin-right: 5px;
-    background-color: #131a48;
-    background-image:
-        repeating-linear-gradient(0deg, rgba(255,214,120,.38) 0 3px, transparent 3px 14px),
-        repeating-linear-gradient(90deg, transparent 0 8px, rgba(5,8,25,.85) 8px 11px);
-}
-.sky-layer.far i { background-color: #1d2562; }
-@keyframes skyScroll { to { transform: translateX(-50%); } }
+    for (let t = -half; t <= half; t += 2) {
+        const rim = Math.abs(t) === half;
+        discs += `<b class="disc ${rim ? "rim" : ""}" style="--s:${size};--t:${t}"></b>`;
+    }
 
-.floor {
-    position: absolute; left: -60%; width: 220%; bottom: -6%; height: 46%;
-    transform-origin: 50% 100%;
-    transform: rotateX(68deg);
-    background:
-        repeating-linear-gradient(90deg, rgba(0,245,160,.45) 0 2px, transparent 2px 90px),
-        repeating-linear-gradient(0deg, rgba(0,217,255,.45) 0 2px, transparent 2px 90px),
-        linear-gradient(#10163a, #070a1c);
-    animation: floorMove 1.6s linear infinite;
-    -webkit-mask-image: linear-gradient(to top, #000 25%, transparent);
-            mask-image: linear-gradient(to top, #000 25%, transparent);
+    return `<div class="wheel" style="--x:${x};--y:${y};--z:${z}"><div class="spin">${discs}</div></div>`;
 }
-@keyframes floorMove { to { background-position: 0 0, 0 90px, 0 0; } }
 
-.vignette { position: absolute; inset: 0; background: radial-gradient(ellipse at 50% 40%, transparent 40%, rgba(2,4,14,.7)); }
+/* full vehicle model. Front faces -Z, so you see the rear from behind. */
+function vehicleHTML(type, color, plate) {
+
+    const pl = esc(String(plate || "").slice(0, 11));
+    let h = "";
+
+    if (type === "Bike") {
+
+        h += `<div class="under" style="--uw:46;--ud:140"></div>`;
+        h += wheel(0, -16, -40, 32, 2) + wheel(0, -16, 40, 32, 2);
+
+        /* fork, engine, tank, seat, tail */
+        h += bx(3, 26, 3, -5, -27, -35, "chrome", "--rx:-24deg");
+        h += bx(3, 26, 3, 5, -27, -35, "chrome", "--rx:-24deg");
+        h += bx(12, 12, 24, 0, -19, 2, "dark");
+        h += bx(15, 9, 26, 0, -33, -10);
+        h += bx(12, 4, 26, 0, -30, 13, "dark");
+        h += bx(10, 6, 16, 0, -32, 30);
+        h += bx(30, 3, 3, 0, -39, -30, "dark");
+        h += bx(9, 9, 5, 0, -39, -37, "lamp");
+        h += bx(8, 4, 2, 0, -33, 38.5, "tail");
+        h += bx(5, 5, 30, 9, -11, 20, "chrome");
+        h += bx(16, 8, 1, 0, -24, 57, "plate", "", "b", pl);
+
+        /* rider */
+        h += bx(14, 24, 10, 0, -47, 10, "dark", "--rx:-8deg");
+        h += bx(4, 4, 36, -9, -45, -12, "dark") + bx(4, 4, 36, 9, -45, -12, "dark");
+        h += bx(5, 5, 20, -9, -31, 6, "dark") + bx(5, 5, 20, 9, -31, 6, "dark");
+        h += bx(12, 12, 12, 0, -66, 6);
+
+    } else if (type === "SUV") {
+
+        h += `<div class="under" style="--uw:88;--ud:176"></div>`;
+        h += bx(66, 22, 142, 0, -17, 0);
+        h += bx(60, 20, 104, 0, -38, 14, "glass3");
+        h += bx(62, 2, 106, 0, -49, 14);
+        h += bx(3, 3, 90, -26, -51.5, 14, "dark") + bx(3, 3, 90, 26, -51.5, 14, "dark");
+        h += bx(64, 8, 5, 0, -9, -71.5, "dark") + bx(64, 8, 5, 0, -9, 71.5, "dark");
+        h += bx(16, 8, 2, -22, -20, -71.5, "lamp") + bx(16, 8, 2, 22, -20, -71.5, "lamp");
+        h += bx(14, 8, 2, -24, -20, 71.5, "tail") + bx(14, 8, 2, 24, -20, 71.5, "tail");
+        h += bx(30, 9, 1, 0, -9, 74.5, "plate", "", "b", pl);
+        h += bx(6, 3, 6, -34, -30, -26, "dark") + bx(6, 3, 6, 34, -30, -26, "dark");
+        h += wheel(-37, -15, -46, 30, 5) + wheel(37, -15, -46, 30, 5);
+        h += wheel(-37, -15, 48, 30, 5) + wheel(37, -15, 48, 30, 5);
+
+    } else {
+
+        h += `<div class="under" style="--uw:80;--ud:164"></div>`;
+        h += bx(60, 16, 130, 0, -14, 0);
+        h += bx(50, 14, 64, 0, -29, 10, "glass3");
+        h += bx(52, 2, 62, 0, -37, 10);
+        h += bx(58, 6, 4, 0, -9, -65, "dark") + bx(58, 6, 4, 0, -9, 65, "dark");
+        h += bx(54, 2, 10, 0, -30, 62);
+        h += bx(3, 6, 3, -18, -27, 60, "dark") + bx(3, 6, 3, 18, -27, 60, "dark");
+        h += bx(14, 6, 2, -20, -15, -65.5, "lamp") + bx(14, 6, 2, 20, -15, -65.5, "lamp");
+        h += bx(16, 5, 2, -20, -15, 65.5, "tail") + bx(16, 5, 2, 20, -15, 65.5, "tail");
+        h += bx(30, 9, 1, 0, -10, 67.5, "plate", "", "b", pl);
+        h += bx(6, 3, 6, -33, -26, -12, "dark") + bx(6, 3, 6, 33, -26, -12, "dark");
+        h += wheel(-32, -13, -40, 26, 4) + wheel(32, -13, -40, 26, 4);
+        h += wheel(-32, -13, 42, 26, 4) + wheel(32, -13, 42, 26, 4);
+    }
+
+    return `<div class="v" style="--c:${color || "#00d9ff"}">${h}</div>`;
+}
+
+const SCALE_BY_TYPE = { Car: 1.5, SUV: 1.4, Bike: 1.9 };
+const ICON_BY_TYPE = { Car: "🚗", SUV: "🚙", Bike: "🏍️" };
+
 
 /* =====================================================
-   GENERIC UI
+   MINI 3D CITIES (location cards)
 ===================================================== */
 
-.glass {
-    background: linear-gradient(145deg, rgba(255,255,255,.11), rgba(255,255,255,.03));
-    border: 1px solid var(--line);
-    -webkit-backdrop-filter: blur(14px); backdrop-filter: blur(14px);
-    border-radius: 22px;
-    box-shadow: 0 20px 60px rgba(0,0,0,.45), inset 0 1px 0 rgba(255,255,255,.16);
+function bld(w, h, d, x, z, color, cls) {
+    return bx(w, h, d, x, -h / 2, z, (cls || "") + " win", "--c:" + color);
 }
 
-.btn {
-    font: inherit; font-weight: 700; letter-spacing: .6px;
-    border: 0; cursor: pointer; padding: 13px 22px; border-radius: 14px;
-    color: #04120d;
-    background: linear-gradient(135deg, var(--green), var(--cyan));
-    box-shadow: 0 8px 24px rgba(0,245,160,.32), inset 0 -3px 0 rgba(0,0,0,.18);
-    transition: transform .15s, box-shadow .15s, filter .15s;
-    position: relative; overflow: hidden;
-}
-.btn::after {
-    content: ""; position: absolute; top: 0; left: -80%; width: 50%; height: 100%;
-    background: linear-gradient(100deg, transparent, rgba(255,255,255,.45), transparent);
-    transform: skewX(-20deg); transition: left .5s;
-}
-.btn:hover { transform: translateY(-2px) scale(1.02); filter: brightness(1.08); box-shadow: 0 14px 34px rgba(0,245,160,.45), inset 0 -3px 0 rgba(0,0,0,.18); }
-.btn:hover::after { left: 130%; }
-.btn:active { transform: translateY(1px) scale(.98); }
-.btn[disabled] { opacity: .6; pointer-events: none; }
-.btn.ghost { background: rgba(255,255,255,.08); color: var(--ink); border: 1px solid var(--line); box-shadow: none; }
-.btn.danger { background: linear-gradient(135deg, #ff4d6d, #ff8a5c); color: #fff; box-shadow: 0 8px 24px rgba(255,77,109,.3); }
-.btn.sm { padding: 9px 16px; font-size: 15px; }
-.btn.block { width: 100%; }
-.btn.blue { background: linear-gradient(135deg, #3d7bff, #00d9ff); color: #fff; box-shadow: 0 8px 24px rgba(61,123,255,.4); }
+function cityHTML(kind) {
 
-.link { background: none; border: 0; color: var(--green); font: inherit; font-weight: 700; cursor: pointer; }
-.link:hover { text-decoration: underline; }
+    let h = bx(150, 4, 110, 0, 2, 0, "dark");
 
-.field { display: block; width: 100%; }
-.field input, .field select, input.field {
-    width: 100%; padding: 14px 16px; margin: 7px 0;
-    font: inherit; font-size: 17px; color: var(--ink);
-    background: rgba(5,8,25,.55); border: 1px solid var(--line); border-radius: 12px; outline: none;
-    transition: border-color .2s, box-shadow .2s;
-}
-.field input::placeholder { color: #7587ab; }
-.field input:focus { border-color: var(--green); box-shadow: 0 0 0 3px rgba(0,245,160,.18); }
+    if (kind === "City") {
 
-.tilt { transform-style: preserve-3d; transition: transform .2s ease-out, box-shadow .2s; will-change: transform; }
+        h += bld(22, 90, 22, -45, -20, "#3a4f9e");
+        h += bld(26, 120, 26, -15, -25, "#4a3a9e");
+        h += bld(24, 70, 24, 20, -15, "#2f7fa8");
+        h += bld(20, 100, 20, 50, -22, "#8a3f9e");
+        h += bld(28, 50, 28, -30, 25, "#2a8f7a");
+        h += bld(24, 60, 24, 10, 28, "#a8532f");
+        h += bld(18, 40, 18, 45, 25, "#4a6fbf");
+        h += bx(2, 24, 2, -15, -132, -25, "chrome");
+        h += bx(5, 5, 5, -15, -146, -25, "tail");
 
-.page-title { font-size: clamp(26px, 4.2vw, 42px); text-align: center; margin-bottom: 8px; text-shadow: 0 0 24px rgba(0,217,255,.5); }
-.sub { text-align: center; color: var(--muted); margin-bottom: 28px; font-size: 19px; }
-.back { margin-bottom: 14px; }
-.center { text-align: center; }
+    } else if (kind === "College") {
 
-/* toasts */
-#toasts { position: fixed; top: 16px; left: 50%; transform: translateX(-50%); z-index: 99; display: grid; gap: 10px; width: min(92vw, 420px); }
-.toast {
-    padding: 13px 18px; border-radius: 14px; font-weight: 700; text-align: center;
-    background: rgba(10,16,45,.92); border: 1px solid var(--line); box-shadow: 0 10px 30px rgba(0,0,0,.5);
-    animation: toastIn .35s cubic-bezier(.2,.9,.3,1.3) both;
-}
-.toast.ok { border-color: var(--green); color: var(--green); }
-.toast.warn { border-color: var(--amber); color: var(--amber); }
-.toast.err { border-color: var(--red); color: #ff8da1; }
-.toast.out { animation: toastOut .3s ease both; }
-@keyframes toastIn { from { opacity: 0; transform: translateY(-20px) scale(.9); } }
-@keyframes toastOut { to { opacity: 0; transform: translateY(-16px) scale(.95); } }
+        h += bld(100, 36, 46, 0, 0, "#8d5fd3");
+        h += bx(104, 5, 50, 0, -38.5, 0, "dark");
+        for (let x = -40; x <= 40; x += 16) { h += bx(5, 30, 5, x, -15, 27, "chrome"); }
+        h += bx(70, 4, 10, 0, -2, 33, "chrome");
+        h += bld(22, 70, 22, 0, -5, "#b07af0");
+        h += bx(26, 6, 26, 0, -73, -5, "dark");
+        h += bx(2, 20, 2, 0, -86, -5, "chrome");
+        h += bx(12, 7, 1, 6, -92, -5, "tail");
 
-/* =====================================================
-   3D ENGINE  (boxes, wheels, vehicles)
-===================================================== */
+    } else if (kind === "Market") {
 
-.v { position: relative; width: 0; height: 0; transform-style: preserve-3d; }
+        const awn = ["#ff3cac", "#ffc53d", "#00d9ff", "#00f5a0", "#ff6b35", "#7c5cff"];
+        let k = 0;
 
-.box {
-    position: absolute; left: 0; top: 0; width: 0; height: 0;
-    transform-style: preserve-3d;
-    transform: translate3d(calc(var(--x, 0) * 1px), calc(var(--y, 0) * 1px), calc(var(--z, 0) * 1px)) rotateX(var(--rx, 0deg));
-}
-.box > i {
-    --sh: transparent;
-    position: absolute; left: 0; top: 0; display: block;
-    backface-visibility: hidden;
-    background: linear-gradient(var(--sh), var(--sh)), var(--c, #4a90ff);
-}
-.box > .f { --sh: rgba(0,0,0,.10); width: calc(var(--w) * 1px); height: calc(var(--h) * 1px); margin: calc(var(--h) * -.5px) 0 0 calc(var(--w) * -.5px); transform: translateZ(calc(var(--d) * .5px)); }
-.box > .b { --sh: rgba(0,0,0,.32); width: calc(var(--w) * 1px); height: calc(var(--h) * 1px); margin: calc(var(--h) * -.5px) 0 0 calc(var(--w) * -.5px); transform: rotateY(180deg) translateZ(calc(var(--d) * .5px)); }
-.box > .r { --sh: rgba(0,0,0,.22); width: calc(var(--d) * 1px); height: calc(var(--h) * 1px); margin: calc(var(--h) * -.5px) 0 0 calc(var(--d) * -.5px); transform: rotateY(90deg) translateZ(calc(var(--w) * .5px)); }
-.box > .l { --sh: rgba(0,0,0,.40); width: calc(var(--d) * 1px); height: calc(var(--h) * 1px); margin: calc(var(--h) * -.5px) 0 0 calc(var(--d) * -.5px); transform: rotateY(-90deg) translateZ(calc(var(--w) * .5px)); }
-.box > .t { --sh: rgba(255,255,255,.16); width: calc(var(--w) * 1px); height: calc(var(--d) * 1px); margin: calc(var(--d) * -.5px) 0 0 calc(var(--w) * -.5px); transform: rotateX(90deg) translateZ(calc(var(--h) * .5px)); }
-.box > .u { --sh: rgba(0,0,0,.6); width: calc(var(--w) * 1px); height: calc(var(--d) * 1px); margin: calc(var(--d) * -.5px) 0 0 calc(var(--w) * -.5px); transform: rotateX(-90deg) translateZ(calc(var(--h) * .5px)); }
+        [-40, 0, 40].forEach((x) => {
+            [-24, 22].forEach((z) => {
+                h += bx(30, 12, 20, x, -6, z, "", "--c:#8b5a2b");
+                h += bx(34, 3, 26, x, -34, z, "awn", "--c:" + awn[k++ % awn.length] + ";--rx:-10deg");
+                h += bx(2, 30, 2, x - 15, -15, z + 11, "chrome") + bx(2, 30, 2, x + 15, -15, z + 11, "chrome");
+            });
+        });
 
-.chrome > i { --c: #b9c4d8; }
-.dark > i   { --c: #151825; }
-.glass3 > i { --c: rgba(140,220,255,.55); }
-.lamp > i   { --c: #fff3a8; box-shadow: 0 0 12px 3px rgba(255,240,150,.8); }
-.tail > i   { --c: #ff2d55; box-shadow: 0 0 10px 2px rgba(255,45,85,.85); }
-.plate > i  { --c: #f5f5f0; }
-.plate > .b { color: #111; font: 700 5.5px/9px 'Orbitron', sans-serif; text-align: center; white-space: nowrap; overflow: hidden; }
-.sign > .f  { display: flex; align-items: center; justify-content: center; font: 800 9px 'Orbitron', sans-serif; color: #201400; }
+    } else {
 
-.win > i {
-    background:
-        linear-gradient(var(--sh), var(--sh)),
-        repeating-linear-gradient(90deg, transparent 0 8px, rgba(0,0,0,.4) 8px 10px),
-        repeating-linear-gradient(0deg, rgba(255,226,140,.85) 0 5px, transparent 5px 12px),
-        var(--c);
-}
-.win > .t, .win > .u { background: var(--c); }
-.awn > .t, .awn > .f { background: repeating-linear-gradient(90deg, var(--c) 0 6px, #fff 6px 12px); }
+        h += bx(110, 44, 60, 0, -22, 0, "", "--c:#2c3e75");
+        h += bx(100, 30, 2, 0, -17, 31, "glass3");
+        h += bx(60, 12, 4, 0, -50, 28, "lamp sign", "", "f", "MALL");
+        h += bx(18, 22, 2, 0, -11, 31.5, "dark");
+        h += bx(16, 8, 14, -34, -48, -8, "chrome") + bx(16, 8, 14, 34, -48, -8, "chrome");
+        h += bx(120, 2, 22, 0, -1, 44, "", "--c:#3a4260");
+    }
 
-/* wheels */
-.wheel { position: absolute; left: 0; top: 0; width: 0; height: 0; transform-style: preserve-3d; transform: translate3d(calc(var(--x) * 1px), calc(var(--y) * 1px), calc(var(--z) * 1px)); }
-.spin { position: absolute; left: 0; top: 0; width: 0; height: 0; transform-style: preserve-3d; }
-.disc {
-    position: absolute; left: 0; top: 0;
-    width: calc(var(--s) * 1px); height: calc(var(--s) * 1px);
-    margin: calc(var(--s) * -.5px) 0 0 calc(var(--s) * -.5px);
-    border-radius: 50%; background: #14161d;
-    transform: rotateY(90deg) translateZ(calc(var(--t) * 1px));
-}
-.disc.rim {
-    background:
-        radial-gradient(circle, #e9eef7 0 17%, transparent 18%),
-        repeating-conic-gradient(#aeb8c9 0 14deg, #262b38 14deg 28deg);
-    box-shadow: inset 0 0 0 calc(var(--s) * .17px) #14161d;
-}
-.rolling .spin { animation: spin .5s linear infinite; }
-@keyframes spin { to { transform: rotateX(360deg); } }
-
-/* neon underglow */
-.under {
-    position: absolute; left: 0; top: 0;
-    width: calc(var(--uw) * 1px); height: calc(var(--ud) * 1px);
-    margin: calc(var(--ud) * -.5px) 0 0 calc(var(--uw) * -.5px);
-    border-radius: 50%;
-    background: radial-gradient(ellipse, var(--c) 0%, transparent 68%);
-    opacity: .65;
-    transform: rotateX(90deg) translateZ(1px);
+    return `<div class="mini-cam"><div class="mini-spin">${h}</div></div>`;
 }
 
-@keyframes turn { to { transform: rotateY(360deg); } }
-
-/* =====================================================
-   AUTH
-===================================================== */
-
-.auth-page { min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 24px; }
-.auth-wrap { width: 100%; max-width: 1100px; display: grid; grid-template-columns: 1.15fr .85fr; gap: 34px; align-items: center; }
-
-.hero .road-scene { height: 340px; border-radius: 26px; box-shadow: 0 25px 70px rgba(0,0,0,.55), 0 0 0 1px var(--line); }
-.hero-copy { margin-top: 22px; }
-.hero-copy h1 { font-size: clamp(26px, 3.6vw, 44px); line-height: 1.15; }
-.hero-copy h1 span { background: linear-gradient(90deg, var(--green), var(--cyan), var(--pink)); -webkit-background-clip: text; background-clip: text; color: transparent; }
-.hero-copy p { color: var(--muted); margin: 12px 0 14px; font-size: 19px; }
-.chips { display: flex; gap: 10px; flex-wrap: wrap; }
-.chips span { padding: 6px 14px; border-radius: 99px; background: rgba(255,255,255,.08); border: 1px solid var(--line); font-weight: 700; font-size: 15px; }
-
-.auth-box { padding: 34px 30px; text-align: center; animation: pageIn .6s cubic-bezier(.2,.8,.2,1) both; }
-.logo { font-size: 30px; font-weight: 800; color: var(--green); margin-bottom: 12px; text-shadow: 0 0 20px rgba(0,245,160,.6); }
-.auth-box h2 { margin-bottom: 6px; }
-.auth-box p { color: var(--muted); margin: 6px 0 14px; }
-.auth-box .btn { margin-top: 10px; }
-.demo { font-size: 14px; opacity: .85; }
-
-/* =====================================================
-   HEADER + STEPPER
-===================================================== */
-
-header {
-    position: sticky; top: 0; z-index: 20;
-    display: flex; align-items: center; justify-content: space-between; gap: 14px;
-    padding: 12px 4%;
-    background: rgba(6,10,28,.72);
-    -webkit-backdrop-filter: blur(14px); backdrop-filter: blur(14px);
-    border-bottom: 1px solid var(--line);
-}
-.header-logo { font-size: 22px; font-weight: 800; color: var(--green); text-shadow: 0 0 16px rgba(0,245,160,.5); white-space: nowrap; }
-.header-right { display: flex; align-items: center; gap: 12px; }
-.user-pill { padding: 6px 14px; border-radius: 99px; background: rgba(255,255,255,.08); border: 1px solid var(--line); font-weight: 700; font-size: 15px; max-width: 160px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-
-.steps { display: flex; align-items: center; gap: 6px; flex: 1; justify-content: center; }
-.steps .st { display: flex; align-items: center; gap: 6px; color: #5f7196; font-size: 14px; font-weight: 700; }
-.steps .st b { width: 24px; height: 24px; border-radius: 50%; display: grid; place-items: center; font-size: 12px; background: rgba(255,255,255,.07); border: 1px solid var(--line); }
-.steps .st::after { content: ""; width: 18px; height: 2px; background: rgba(255,255,255,.12); }
-.steps .st:last-child::after { display: none; }
-.steps .st.done { color: var(--green); }
-.steps .st.done b { background: var(--green); color: #04120d; border-color: transparent; }
-.steps .st.done::after { background: var(--green); }
-.steps .st.now { color: #fff; }
-.steps .st.now b { background: var(--cyan); color: #04120d; box-shadow: 0 0 14px var(--cyan); animation: pulse 1.4s infinite; }
-@keyframes pulse { 50% { transform: scale(1.18); } }
-
-/* =====================================================
-   PAGES
-===================================================== */
-
-main { max-width: 1100px; margin: 0 auto; padding: 0 18px; }
-.page { display: none; padding: 30px 0 70px; min-height: calc(100vh - 66px); }
-.page.active { display: block; animation: pageIn .65s cubic-bezier(.2,.8,.2,1) both; }
-@keyframes pageIn { from { opacity: 0; transform: perspective(1200px) translate3d(70px, 0, -120px) rotateY(-14deg); } to { opacity: 1; transform: none; } }
-
-/* ---------- VEHICLE ---------- */
-.vehicle-grid { display: grid; grid-template-columns: 1.1fr 1fr; gap: 26px; align-items: stretch; }
-
-.showroom {
-    position: relative; min-height: 400px; overflow: hidden; perspective: 1100px;
-    border-radius: 24px; border: 1px solid var(--line);
-    background: radial-gradient(ellipse at 50% 85%, rgba(0,245,160,.18), transparent 60%), linear-gradient(#0a1030, #10173f);
-    box-shadow: 0 20px 60px rgba(0,0,0,.45);
-}
-.showroom .cam {
-    position: absolute; left: 50%; top: 62%; width: 0; height: 0;
-    transform-style: preserve-3d;
-    transform: rotateX(-20deg) scale3d(var(--sc, 1.5), var(--sc, 1.5), var(--sc, 1.5));
-}
-.turntable { transform-style: preserve-3d; animation: turn 10s linear infinite; }
-.platform {
-    position: absolute; left: 0; top: 0; width: 270px; height: 270px; margin: -135px 0 0 -135px; border-radius: 50%;
-    transform: rotateX(90deg) translateZ(-1px);
-    background:
-        radial-gradient(circle, rgba(0,245,160,.25) 0 32%, transparent 33%),
-        repeating-radial-gradient(circle, rgba(0,217,255,.55) 0 2px, transparent 2px 22px),
-        conic-gradient(from 0deg, rgba(0,245,160,.0), rgba(0,245,160,.55), rgba(255,60,172,.0) 55%, rgba(255,60,172,.5), rgba(0,245,160,0));
-    box-shadow: 0 0 60px rgba(0,245,160,.35);
-}
-.showroom-tag { position: absolute; left: 16px; bottom: 14px; padding: 6px 14px; border-radius: 99px; background: rgba(0,0,0,.4); border: 1px solid var(--line); font-weight: 700; }
-
-.form-card { padding: 28px; }
-.form-card h3 { margin-bottom: 4px; }
-.form-card .lbl { display: block; margin: 12px 0 4px; color: var(--muted); font-weight: 700; font-size: 15px; letter-spacing: .5px; text-transform: uppercase; }
-.type-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
-.chip {
-    font: inherit; font-weight: 700; cursor: pointer; padding: 12px 6px; border-radius: 14px; color: var(--ink);
-    background: rgba(255,255,255,.06); border: 1px solid var(--line); transition: .2s;
-}
-.chip:hover { transform: translateY(-2px); border-color: var(--cyan); }
-.chip.on { background: linear-gradient(135deg, rgba(0,245,160,.25), rgba(0,217,255,.25)); border-color: var(--green); box-shadow: 0 0 18px rgba(0,245,160,.3); }
-.color-row { display: flex; gap: 10px; flex-wrap: wrap; margin: 6px 0 12px; }
-.swatch { width: 34px; height: 34px; border-radius: 50%; border: 3px solid transparent; background: var(--sw); cursor: pointer; transition: .2s; box-shadow: 0 0 12px var(--sw); }
-.swatch:hover { transform: scale(1.15); }
-.swatch.on { border-color: #fff; transform: scale(1.18); }
-
-/* ---------- LOCATION ---------- */
-.current-location-btn { display: block; margin: 0 auto 10px; padding: 15px 28px; }
-#currentLocationStatus { min-height: 26px; margin-bottom: 20px; text-align: center; font-weight: 700; color: var(--cyan); }
-
-.location-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 22px; max-width: 760px; margin: 0 auto; }
-.loc-card { font: inherit; color: var(--ink); cursor: pointer; padding: 14px 14px 20px; text-align: center; }
-.loc-card:hover { border-color: var(--green); box-shadow: 0 25px 60px rgba(0,0,0,.5), 0 0 30px rgba(0,245,160,.25); }
-.loc-name { display: block; font: 700 19px 'Orbitron', sans-serif; margin-top: 4px; }
-.loc-card small { color: var(--muted); font-size: 15px; }
-
-.mini { position: relative; height: 170px; perspective: 700px; overflow: hidden; border-radius: 16px; background: radial-gradient(ellipse at 50% 90%, rgba(0,217,255,.2), transparent 65%); }
-.mini-cam { position: absolute; left: 50%; top: 74%; width: 0; height: 0; transform-style: preserve-3d; transform: rotateX(-24deg) scale(1.05); }
-.mini-spin { transform-style: preserve-3d; animation: turn 16s linear infinite; animation-play-state: paused; animation-delay: -2.4s; }
-.loc-card:hover .mini-spin { animation-play-state: running; }
-
-/* ---------- PARKING ---------- */
-.parking-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 22px; }
-.parking-card { padding: 24px; text-align: left; display: flex; gap: 18px; align-items: center; flex-wrap: wrap; animation: rise .6s cubic-bezier(.2,.8,.2,1) both; animation-delay: calc(var(--i) * .12s); }
-.parking-card:hover { border-color: var(--cyan); box-shadow: 0 25px 60px rgba(0,0,0,.5), 0 0 30px rgba(0,217,255,.25); }
-@keyframes rise { from { opacity: 0; transform: translateY(40px) rotateX(18deg); } }
-.p-sign {
-    width: 74px; height: 74px; border-radius: 18px; display: grid; place-items: center; flex: none;
-    font: 800 42px 'Orbitron', sans-serif; color: #fff;
-    background: linear-gradient(135deg, #2a6bff, #00d9ff);
-    box-shadow: 0 10px 26px rgba(0,120,255,.5), inset 0 -6px 0 rgba(0,0,0,.2);
-    transform: translateZ(30px); animation: bobSign 3s ease-in-out infinite;
-}
-@keyframes bobSign { 50% { transform: translateY(-5px) rotate(-3deg); } }
-.p-info { flex: 1; min-width: 150px; }
-.p-info h3 { font-size: 19px; margin-bottom: 4px; }
-.p-info p { color: var(--muted); margin: 4px 0; }
-.meter { height: 8px; border-radius: 99px; background: rgba(255,255,255,.1); overflow: hidden; margin: 10px 0 4px; }
-.meter span { display: block; height: 100%; border-radius: 99px; background: linear-gradient(90deg, var(--green), var(--cyan)); }
-.free-badge, .paid-badge { display: inline-block; padding: 5px 12px; border-radius: 99px; font-weight: 800; font-size: 14px; margin-top: 6px; }
-.free-badge { background: rgba(0,245,160,.16); color: var(--green); border: 1px solid rgba(0,245,160,.5); }
-.paid-badge { background: rgba(255,197,61,.14); color: var(--amber); border: 1px solid rgba(255,197,61,.5); }
-.parking-card .btn { width: 100%; }
-
-/* ---------- SLOT LOT (3D) ---------- */
-.slot-hud { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; margin-bottom: 8px; }
-.pill { padding: 7px 16px; border-radius: 99px; background: rgba(255,255,255,.08); border: 1px solid var(--line); font-weight: 700; }
-.pill.g { color: var(--green); } .pill.r { color: #ff8da1; } .pill.c { color: var(--cyan); }
-#selectedParkingText { text-align: center; color: var(--muted); margin-bottom: 8px; }
-
-.lot-wrap { perspective: 1100px; margin: 6px auto 0; padding-bottom: 20px; }
-.lot {
-    --cols: 8; --rz: 0deg;
-    position: relative; margin: 0 auto;
-    width: min(96vw, calc(var(--cols) * 112px + 56px));
-    display: grid; grid-template-columns: repeat(var(--cols), 1fr); gap: 10px;
-    padding: 28px;
-    transform-style: preserve-3d;
-    transform: rotateX(48deg) rotateZ(var(--rz));
-    transition: transform .25s ease-out;
-    background: linear-gradient(#262c3d, #1a1f30);
-    border: 4px solid #3a4260; border-radius: 16px;
-    box-shadow: 0 0 70px rgba(0,217,255,.25), inset 0 0 40px rgba(0,0,0,.5);
-}
-.lot::after { content: "ENTRANCE  ▲"; position: absolute; left: 0; right: 0; bottom: 4px; text-align: center; font: 700 13px 'Orbitron', sans-serif; letter-spacing: 6px; color: rgba(255,255,255,.35); }
-.bay {
-    position: relative; height: 112px; transform-style: preserve-3d; cursor: pointer;
-    border: 3px solid rgba(255,255,255,.65); border-radius: 6px;
-    transition: background .2s, box-shadow .2s;
-}
-.bay .no { position: absolute; left: 0; right: 0; bottom: 6px; text-align: center; font: 700 15px 'Orbitron', sans-serif; color: rgba(255,255,255,.75); }
-.bay.free { background: rgba(0,245,160,.07); }
-.bay.free:hover { background: rgba(0,245,160,.28); box-shadow: inset 0 0 26px rgba(0,245,160,.7), 0 0 20px rgba(0,245,160,.4); }
-.bay.occ { background: rgba(255,77,109,.12); border-color: rgba(255,77,109,.6); cursor: not-allowed; }
-.bay .tag { position: absolute; top: 4px; left: 0; right: 0; text-align: center; font: 700 10px 'Orbitron', sans-serif; color: #ff8da1; letter-spacing: 1px; }
-.bay.sel { background: rgba(0,217,255,.25); border-color: var(--cyan); animation: selGlow 1.3s ease-in-out infinite; }
-@keyframes selGlow { 50% { box-shadow: 0 0 34px rgba(0,217,255,.9), inset 0 0 24px rgba(0,217,255,.7); } }
-
-.vwrap { position: absolute; left: 50%; top: 50%; width: 0; height: 0; transform-style: preserve-3d; transform: rotateX(-90deg) scale(.72); pointer-events: none; }
-.vwrap.mine { animation: driveIn 1.1s cubic-bezier(.2,.7,.3,1) both; }
-.vwrap.mine .spin { animation: spin .3s linear 4; }
-@keyframes driveIn {
-    from { transform: translate3d(0, 330px, 0) rotateX(-90deg) scale(.72); opacity: .2; }
-    to   { transform: translate3d(0, 0, 0) rotateX(-90deg) scale(.72); opacity: 1; }
-}
-
-/* ---------- DURATION ---------- */
-.duration-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 18px; max-width: 800px; margin: 0 auto; }
-.dur-card { font: inherit; color: var(--ink); cursor: pointer; padding: 26px 10px; display: grid; gap: 4px; justify-items: center; animation: rise .55s cubic-bezier(.2,.8,.2,1) both; animation-delay: calc(var(--i) * .08s); }
-.dur-card:hover { border-color: var(--green); box-shadow: 0 25px 55px rgba(0,0,0,.5), 0 0 30px rgba(0,245,160,.3); }
-.dur-ring { width: 84px; height: 84px; border-radius: 50%; display: grid; place-items: center; background: conic-gradient(var(--green) calc(var(--p) * 1%), rgba(255,255,255,.1) 0); transform: translateZ(26px); }
-.dur-ring span { width: 66px; height: 66px; border-radius: 50%; display: grid; place-items: center; background: #0b1131; font: 800 26px 'Orbitron', sans-serif; }
-.dur-unit { color: var(--muted); font-weight: 700; }
-.dur-price { font: 800 18px 'Orbitron', sans-serif; color: var(--amber); }
-
-/* ---------- PAYMENT ---------- */
-.payment-box { max-width: 520px; margin: 0 auto 26px; padding: 26px; text-align: center; position: relative; }
-.payment-box h2 { color: var(--green); margin-bottom: 8px; }
-.payment-box p { color: var(--muted); margin: 4px 0; }
-.payment-box h3 { margin-top: 10px; }
-.coin-wrap { height: 90px; perspective: 500px; margin-bottom: 8px; }
-.coin { width: 70px; height: 70px; margin: 8px auto 0; position: relative; transform-style: preserve-3d; animation: coinSpin 2.4s linear infinite; }
-.coin i { position: absolute; inset: 0; border-radius: 50%; display: grid; place-items: center; font: 800 34px 'Orbitron', sans-serif; color: #7a5200; background: radial-gradient(circle at 35% 30%, #fff3b0, #ffc53d 55%, #c98a00); box-shadow: inset 0 0 0 5px rgba(160,100,0,.35), 0 0 26px rgba(255,197,61,.55); backface-visibility: visible; }
-.coin i:nth-child(2) { transform: translateZ(-4px); filter: brightness(.8); }
-.coin i:nth-child(1) { transform: translateZ(4px); }
-.coin i:nth-child(3) { transform: translateZ(0); background: #a87000; box-shadow: none; color: transparent; width: 100%; }
-@keyframes coinSpin { to { transform: rotateY(360deg); } }
-
-#paymentOptions h3, #freeParkingBox { text-align: center; }
-.payment-methods { display: flex; justify-content: center; gap: 16px; margin: 20px 0; flex-wrap: wrap; }
-.pay-tile { font: inherit; color: var(--ink); cursor: pointer; padding: 20px 26px; min-width: 130px; font-weight: 700; font-size: 18px; }
-.pay-tile:hover { border-color: var(--cyan); }
-.pay-tile.selected { background: linear-gradient(135deg, rgba(0,245,160,.3), rgba(0,217,255,.25)); border-color: var(--green); box-shadow: 0 0 28px rgba(0,245,160,.4); }
-
-/* ---------- CONFIRMATION ---------- */
-.confirmation-box { max-width: 640px; margin: 0 auto; padding: 30px; text-align: center; position: relative; overflow: hidden; }
-.success-icon { width: 70px; height: 70px; border-radius: 50%; margin: 0 auto 10px; display: grid; place-items: center; font-size: 38px; color: #04120d; background: linear-gradient(135deg, var(--green), var(--cyan)); box-shadow: 0 0 40px rgba(0,245,160,.6); animation: pop .7s cubic-bezier(.2,1.6,.4,1) both; }
-@keyframes pop { from { transform: scale(0) rotate(-90deg); } }
-.confirm-car { position: relative; height: 170px; perspective: 800px; margin: 8px 0; }
-.confirm-car .cam { position: absolute; left: 50%; top: 66%; width: 0; height: 0; transform-style: preserve-3d; transform: rotateX(-20deg) scale3d(1.1, 1.1, 1.1); }
-.confirm-car .turntable { animation-duration: 8s; }
-.confirm-car .platform { width: 200px; height: 200px; margin: -100px 0 0 -100px; }
-#bookingDetails { text-align: left; background: rgba(5,8,25,.5); border: 1px dashed rgba(255,255,255,.25); border-radius: 16px; padding: 18px 20px; margin: 16px 0; }
-.tk-row { display: flex; justify-content: space-between; gap: 14px; padding: 6px 0; border-bottom: 1px solid rgba(255,255,255,.07); }
-.tk-row:last-of-type { border-bottom: 0; }
-.tk-row span { color: var(--muted); }
-.tk-row b { text-align: right; }
-.barcode { display: flex; gap: 2px; justify-content: center; height: 44px; margin-top: 12px; }
-.barcode i { display: block; background: #e8f0ff; }
-.confetti { position: fixed; top: -20px; width: 10px; height: 16px; z-index: 98; pointer-events: none; animation: fall linear forwards; }
-@keyframes fall { to { transform: translate3d(var(--dx), 110vh, 0) rotateZ(720deg) rotateX(540deg); opacity: .9; } }
-
-/* ---------- NAVIGATION ---------- */
-.navigation-box { max-width: 760px; margin: 0 auto; padding: 18px; text-align: center; }
-.navigation-box .road-scene { height: 380px; border-radius: 18px; }
-.nav-hud { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin: 14px 0; }
-.hud-cell { padding: 12px 8px; border-radius: 14px; background: rgba(5,8,25,.55); border: 1px solid var(--line); }
-.hud-cell small { display: block; color: var(--muted); font-weight: 700; text-transform: uppercase; font-size: 12px; letter-spacing: 1px; }
-.hud-cell b { font: 700 18px 'Orbitron', sans-serif; color: var(--cyan); }
-#navigationText { color: var(--muted); margin-bottom: 6px; }
-.nav-btns { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; margin-top: 10px; }
 
 /* =====================================================
    ROAD SCENE (login hero + navigation)
 ===================================================== */
 
-.road-scene {
-    position: relative; overflow: hidden;
-    perspective: 520px; perspective-origin: 50% 38%;
-    background: linear-gradient(#060a22 0%, #1a0f48 22%, #52206f 34%, #ff6a88 38%, #0a1028 38.3%, #070a1a 100%);
+function createRoadScene(el, type, color, plate, withTraffic) {
+
+    let w = "";
+
+    for (let i = 0; i < 16; i++) {
+
+        const z = 420 - i * 250;
+        const p = i % 2;
+        const bw = p ? 110 : 80;
+        const bh = p ? 250 : 170;
+        const cl = p ? "#2a3b8f" : "#4b2f8f";
+        const cr = p ? "#4b2f8f" : "#1f6f9f";
+
+        w += bx(bw, bh, 90, -(220 + bw / 2), 95 - bh / 2, z, "win", "--c:" + cl);
+        w += bx(bw, bh, 90, 220 + bw / 2, 95 - bh / 2, z - 125, "win", "--c:" + cr);
+
+        w += bx(4, 85, 4, -165, 95 - 42.5, z, "chrome");
+        w += bx(4, 85, 4, 165, 95 - 42.5, z - 125, "chrome");
+        w += bx(18, 4, 5, -157, 95 - 87, z, "lamp");
+        w += bx(18, 4, 5, 157, 95 - 87, z - 125, "lamp");
+    }
+
+    let traffic = "";
+
+    if (withTraffic !== false) {
+        const cols = ["#ff3cac", "#ffc53d", "#7c5cff"];
+        const types = ["Car", "SUV", "Bike"];
+
+        traffic = cols.map((c, i) =>
+            `<div class="traffic" style="animation-delay:${-i * 1.9}s;animation-duration:${5 + i * 0.7}s">${vehicleHTML(types[i], c, "")}</div>`
+        ).join("");
+    }
+
+    el.classList.remove("arrived");
+
+    el.innerHTML =
+        `<div class="rs-sky"></div>` +
+        `<div class="rs-dest">P</div>` +
+        `<div class="rs-world">${w}<div class="rs-road"></div></div>` +
+        `<div class="rs-fog"></div>` +
+        `<div class="rs-fixed">${traffic}<div class="rs-car">${vehicleHTML(type, color, plate)}</div></div>`;
 }
-.rs-sky {
-    position: absolute; inset: 0 0 62% 0; opacity: .85;
-    background-image: radial-gradient(1.5px 1.5px at 20px 20px, #fff, transparent), radial-gradient(1px 1px at 80px 60px, #fff, transparent), radial-gradient(1px 1px at 140px 30px, #cde, transparent);
-    background-size: 160px 90px;
-}
-.rs-dest {
-    position: absolute; left: 50%; top: 38%; width: 46px; height: 46px; margin: -52px 0 0 -23px; border-radius: 12px;
-    display: grid; place-items: center; font: 800 26px 'Orbitron', sans-serif; color: #fff;
-    background: linear-gradient(135deg, #2a6bff, #00d9ff); box-shadow: 0 0 40px 6px rgba(0,217,255,.7);
-    animation: bobSign 2.4s ease-in-out infinite;
-}
-.rs-world { position: absolute; left: 50%; top: 38%; width: 0; height: 0; transform-style: preserve-3d; animation: drive 2.2s linear infinite; }
-@keyframes drive { from { transform: translateZ(0); } to { transform: translateZ(500px); } }
-.rs-road {
-    position: absolute; left: -150px; top: 0; width: 300px; height: 6000px;
-    transform-origin: 50% 0;
-    transform: translate3d(0, 95px, 420px) rotateX(-90deg);
-    background:
-        repeating-linear-gradient(0deg, #fff 0 50px, transparent 50px 100px) center / 6px 100% no-repeat,
-        linear-gradient(90deg, transparent 0 6px, #ffd34d 6px 10px, #222a45 10px calc(100% - 10px), #ffd34d calc(100% - 10px) calc(100% - 6px), transparent calc(100% - 6px));
-    background-color: #222a45;
-}
-.rs-fog { position: absolute; inset: 0; pointer-events: none; background: radial-gradient(ellipse 55% 26% at 50% 38%, rgba(255,106,136,.75), transparent 100%), linear-gradient(transparent 70%, rgba(3,5,16,.6)); }
-.rs-fixed { position: absolute; left: 50%; top: 38%; width: 0; height: 0; transform-style: preserve-3d; }
-.rs-car { position: absolute; left: 0; top: 0; width: 0; height: 0; transform-style: preserve-3d; transform: translate3d(60px, 95px, 70px) scale(1.1); animation: sway 6s ease-in-out infinite; }
-@keyframes sway {
-    0%, 100% { transform: translate3d(35px, 95px, 70px) scale(1.1); }
-    50%      { transform: translate3d(85px, 95px, 70px) scale(1.1); }
-}
-.rs-fixed .spin { animation: spin .4s linear infinite; }
-.traffic { position: absolute; left: 0; top: 0; width: 0; height: 0; transform-style: preserve-3d; animation: oncoming 5s linear infinite; }
-@keyframes oncoming {
-    from { transform: translate3d(-75px, 95px, -3800px) rotateY(180deg); }
-    to   { transform: translate3d(-75px, 95px, 430px) rotateY(180deg); }
-}
-.road-scene.arrived .rs-world, .road-scene.arrived .traffic, .road-scene.arrived .rs-car { animation-play-state: paused; }
-.road-scene.arrived .rs-fixed .spin { animation-play-state: paused; }
+
 
 /* =====================================================
-   RESPONSIVE
+   BACKGROUND SKYLINE
 ===================================================== */
 
-@media (max-width: 1000px) {
-    .steps .st span { display: none; }
-    .steps .st::after { width: 10px; }
+function buildSkyline(containerId, count, minH, maxH) {
+
+    const parts = [];
+
+    for (let i = 0; i < count; i++) {
+        const w = 40 + Math.round(Math.random() * 70);
+        const h = minH + Math.round(Math.random() * (maxH - minH));
+        parts.push(`<i style="width:${w}px;height:${h}px"></i>`);
+    }
+
+    /* duplicated so the scroll loops seamlessly */
+    $(containerId).innerHTML = parts.join("") + parts.join("");
 }
 
-@media (max-width: 900px) {
-    .auth-wrap { grid-template-columns: 1fr; }
-    .hero .road-scene { height: 240px; }
-    .hero-copy { display: none; }
-    .vehicle-grid { grid-template-columns: 1fr; }
-    .showroom { min-height: 320px; }
+
+/* =====================================================
+   MOUSE EFFECTS (tilt cards, tilting parking lot)
+===================================================== */
+
+document.addEventListener("pointermove", function (e) {
+
+    if (e.pointerType === "touch") { return; }
+
+    const el = e.target.closest ? e.target.closest(".tilt") : null;
+
+    if (el) {
+        const r = el.getBoundingClientRect();
+        const x = (e.clientX - r.left) / r.width - 0.5;
+        const y = (e.clientY - r.top) / r.height - 0.5;
+
+        el.style.transform =
+            `perspective(900px) rotateX(${(-y * 9).toFixed(2)}deg) rotateY(${(x * 11).toFixed(2)}deg) translateZ(6px)`;
+    }
+
+    const wrap = $("lotWrap");
+
+    if (wrap && currentPageId === "slotPage") {
+        const rx = (e.clientX / window.innerWidth - 0.5) * 10;
+        $("slotList").style.setProperty("--rz", rx.toFixed(2) + "deg");
+    }
+});
+
+document.addEventListener("pointerout", function (e) {
+
+    const el = e.target.closest ? e.target.closest(".tilt") : null;
+
+    if (el && !el.contains(e.relatedTarget)) {
+        el.style.transform = "";
+    }
+});
+
+
+/* =====================================================
+   LOGIN / SIGNUP
+===================================================== */
+
+function showSignup() {
+    $("loginPage").classList.add("hidden");
+    $("signupPage").classList.remove("hidden");
 }
 
-@media (max-width: 700px) {
-    body { font-size: 16px; }
-    .parking-grid, .location-grid { grid-template-columns: 1fr; }
-    .duration-grid { grid-template-columns: 1fr 1fr; }
-    .header-logo { font-size: 17px; }
-    .user-pill { display: none; }
-    .steps { display: none; }
-    .bay { height: 100px; }
-    .bay .no { font-size: 12px; }
-    .lot { padding: 16px; gap: 6px; }
-    .nav-hud { grid-template-columns: 1fr; }
-    .navigation-box .road-scene { height: 300px; }
+function showLogin() {
+    $("signupPage").classList.add("hidden");
+    $("loginPage").classList.remove("hidden");
 }
 
-@media (prefers-reduced-motion: reduce) {
-    *, *::before, *::after { animation: none !important; transition: none !important; }
+
+/* ================= SIGNUP ================= */
+
+$("signupForm").addEventListener("submit", function (event) {
+
+    event.preventDefault();
+
+    const name = $("signupName").value.trim();
+    const email = $("signupEmail").value.trim();
+    const password = $("signupPassword").value;
+
+    if (password.length < 6) {
+        toast("Password must contain at least 6 characters.", "warn");
+        return;
+    }
+
+    const existingUser = load("smartparkUser");
+
+    if (existingUser && existingUser.email === email) {
+        toast("Account already exists. Please login.", "warn");
+        return;
+    }
+
+    store("smartparkUser", { name: name, email: email, password: password });
+
+    toast("Account created successfully!", "ok");
+
+    $("loginEmail").value = email;
+
+    showLogin();
+});
+
+
+/* ================= LOGIN ================= */
+
+$("loginForm").addEventListener("submit", function (event) {
+
+    event.preventDefault();
+
+    const email = $("loginEmail").value.trim();
+    const password = $("loginPassword").value;
+
+    /* DEMO ACCOUNT */
+    if (email === "demo@smartpark.com" && password === "123456") {
+        currentUser = { name: "Demo User", email: email };
+        openApp();
+        return;
+    }
+
+    /* SAVED ACCOUNT */
+    const savedUser = load("smartparkUser");
+
+    if (savedUser && savedUser.email === email && savedUser.password === password) {
+        currentUser = { name: savedUser.name, email: savedUser.email };
+        openApp();
+    } else {
+        toast("Invalid email or password.", "err");
+    }
+});
+
+
+/* =====================================================
+   OPEN APP / LOGOUT
+===================================================== */
+
+function openApp() {
+
+    try { sessionStorage.setItem("smartparkSession", JSON.stringify(currentUser)); } catch (e) { /* ignore */ }
+
+    $("authPage").classList.add("hidden");
+    $("appPage").classList.remove("hidden");
+    $("userName").textContent = "👤 " + currentUser.name;
+
+    const saved = load("smartparkVehicle");
+
+    if (saved) {
+        vehicle = Object.assign(vehicle, saved);
+        $("carNumber").value = vehicle.number || "";
+        $("carModel").value = vehicle.model || "";
+    }
+
+    renderColors();
+    setType(vehicle.type || "Car");
+
+    pageHistory = [];
+    showPage("vehiclePage", false);
 }
+
+function logout() {
+
+    currentUser = null;
+
+    try { sessionStorage.removeItem("smartparkSession"); } catch (e) { /* ignore */ }
+    try { localStorage.removeItem("smartparkSession"); } catch (e) { /* ignore */ }
+
+    stopNavSim();
+
+    $("appPage").classList.add("hidden");
+    $("authPage").classList.remove("hidden");
+
+    pageHistory = [];
+    showPage("vehiclePage", false);
+    showLogin();
+}
+
+
+/* =====================================================
+   PAGE NAVIGATION + STEPPER
+===================================================== */
+
+const STEPS = ["Vehicle", "Location", "Parking", "Slot", "Time", "Pay", "Go"];
+
+const PAGE_STEP = {
+    vehiclePage: 0, locationPage: 1, parkingPage: 2, slotPage: 3,
+    durationPage: 4, paymentPage: 5, confirmationPage: 6, navigationPage: 6
+};
+
+function renderSteps(index) {
+
+    $("steps").innerHTML = STEPS.map(function (name, i) {
+        const cls = i < index ? "done" : (i === index ? "now" : "");
+        return `<div class="st ${cls}"><b>${i < index ? "✓" : i + 1}</b><span>${name}</span></div>`;
+    }).join("");
+}
+
+function showPage(pageId, push) {
+
+    if (push !== false && currentPageId && currentPageId !== pageId) {
+        pageHistory.push(currentPageId);
+    }
+
+    currentPageId = pageId;
+
+    if (pageId !== "navigationPage") { stopNavSim(); }
+
+    document.querySelectorAll(".page").forEach(function (page) {
+        page.classList.remove("active");
+    });
+
+    $(pageId).classList.add("active");
+
+    renderSteps(PAGE_STEP[pageId]);
+
+    window.scrollTo(0, 0);
+}
+
+function goBack() {
+
+    const prev = pageHistory.pop();
+
+    if (prev) { showPage(prev, false); }
+}
+
+
+/* =====================================================
+   VEHICLE
+===================================================== */
+
+function renderColors() {
+
+    $("colorRow").innerHTML = COLORS.map(function (c) {
+        return `<button type="button" class="swatch ${c === vehicle.color ? "on" : ""}" style="--sw:${c}" onclick="pickColor('${c}')" aria-label="Paint ${c}"></button>`;
+    }).join("");
+}
+
+function pickColor(color) {
+    vehicle.color = color;
+    renderColors();
+    renderShowroom();
+}
+
+function setType(type) {
+
+    vehicle.type = type;
+    $("vehicleType").value = type;
+
+    document.querySelectorAll(".chip").forEach(function (chip) {
+        chip.classList.toggle("on", chip.dataset.type === type);
+    });
+
+    renderShowroom();
+}
+
+function renderShowroom() {
+
+    const type = vehicle.type || "Car";
+
+    $("showroomStage").innerHTML = vehicleHTML(type, vehicle.color, $("carNumber").value.toUpperCase());
+    $("showCam").style.setProperty("--sc", SCALE_BY_TYPE[type] || 1.5);
+    $("showroomTag").textContent = (ICON_BY_TYPE[type] || "🚗") + " " + type;
+}
+
+$("carNumber").addEventListener("input", function () {
+    this.value = this.value.toUpperCase();
+    renderShowroom();
+});
+
+function saveVehicle() {
+
+    const number = $("carNumber").value.trim().toUpperCase();
+    const model = $("carModel").value.trim();
+    const type = $("vehicleType").value;
+
+    if (!number || !model || !type) {
+        toast("Please enter all vehicle details.", "warn");
+        return;
+    }
+
+    vehicle.number = number;
+    vehicle.model = model;
+    vehicle.type = type;
+
+    store("smartparkVehicle", vehicle);
+
+    showPage("locationPage");
+}
+
+
+/* =====================================================
+   CURRENT LOCATION
+===================================================== */
+
+function useCurrentLocation() {
+
+    const status = $("currentLocationStatus");
+
+    if (!navigator.geolocation) {
+        status.innerText = "❌ Geolocation is not supported by this browser.";
+        return;
+    }
+
+    status.innerText = "📍 Detecting your current location...";
+
+    navigator.geolocation.getCurrentPosition(
+
+        function (position) {
+
+            currentLatitude = position.coords.latitude;
+            currentLongitude = position.coords.longitude;
+
+            status.innerHTML =
+                `✅ Current location detected.<br>
+                Latitude: ${currentLatitude.toFixed(5)}
+                <br>
+                Longitude: ${currentLongitude.toFixed(5)}`;
+
+            /* Prototype behaviour: opens the City list. A real app would query
+               a live parking API using these coordinates. */
+            selectLocation("City");
+        },
+
+        function (error) {
+
+            if (error.code === error.PERMISSION_DENIED) {
+                status.innerText = "❌ Location permission was denied. Please allow location access.";
+            } else if (error.code === error.POSITION_UNAVAILABLE) {
+                status.innerText = "❌ Current location is unavailable.";
+            } else {
+                status.innerText = "❌ Unable to detect your location.";
+            }
+        },
+
+        { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
+    );
+}
+
+
+/* =====================================================
+   LOCATION
+===================================================== */
+
+function selectLocation(location) {
+
+    selectedLocation = location;
+
+    $("selectedLocationText").innerText = "Selected Location: " + location;
+
+    displayParkingLocations();
+
+    showPage("parkingPage");
+}
+
+
+/* =====================================================
+   PARKING DATA
+===================================================== */
+
+const parkingLocations = {
+
+    City: [
+        { name: "City Open Ground", address: "Main Road", type: "Free", fee: 0, slots: 20 },
+        { name: "City Municipal Parking", address: "City Center", type: "Paid", fee: 20, slots: 30 }
+    ],
+
+    College: [
+        { name: "College Ground", address: "College Road", type: "Free", fee: 0, slots: 15 },
+        { name: "College Paid Parking", address: "Near College Gate", type: "Paid", fee: 10, slots: 20 }
+    ],
+
+    Market: [
+        { name: "Market Open Area", address: "Market Road", type: "Free", fee: 0, slots: 12 },
+        { name: "Market Parking Zone", address: "Main Market", type: "Paid", fee: 15, slots: 25 }
+    ],
+
+    Mall: [
+        { name: "Mall Parking", address: "Central Mall", type: "Paid", fee: 30, slots: 40 },
+        { name: "Mall Open Ground", address: "Outside Mall", type: "Free", fee: 0, slots: 10 }
+    ]
+};
+
+/* every 7th slot is shown as occupied (demo data) */
+function occupiedCount(slots) { return Math.floor(slots / 7); }
+
+
+/* =====================================================
+   DISPLAY PARKING
+===================================================== */
+
+function displayParkingLocations() {
+
+    const locations = parkingLocations[selectedLocation];
+
+    $("parkingList").innerHTML = locations.map(function (parking, index) {
+
+        const free = parking.slots - occupiedCount(parking.slots);
+        const pct = Math.round((free / parking.slots) * 100);
+
+        const badge = parking.type === "Free"
+            ? `<span class="free-badge">FREE</span>`
+            : `<span class="paid-badge">PAID - ₹${parking.fee}/hour</span>`;
+
+        return `
+            <div class="parking-card glass tilt" style="--i:${index}">
+                <div class="p-sign">P</div>
+                <div class="p-info">
+                    <h3>${esc(parking.name)}</h3>
+                    <p>📍 ${esc(parking.address)}</p>
+                    <div class="meter"><span style="width:${pct}%"></span></div>
+                    <p>${free} of ${parking.slots} slots free</p>
+                    ${badge}
+                </div>
+                <button class="btn" onclick="selectParking(${index})">Select Parking →</button>
+            </div>`;
+    }).join("");
+}
+
+
+/* =====================================================
+   SELECT PARKING
+===================================================== */
+
+function selectParking(index) {
+
+    selectedParking = parkingLocations[selectedLocation][index];
+    selectedSlot = null;
+
+    $("selectedParkingText").innerHTML =
+        `Parking: <strong>${esc(selectedParking.name)}</strong> &nbsp;·&nbsp; Type: <strong>${selectedParking.type}</strong>`;
+
+    displaySlots();
+    showPage("slotPage");
+}
+
+
+/* =====================================================
+   PARKING SLOTS (3D lot with parked cars)
+===================================================== */
+
+const OCC_TYPES = ["Car", "SUV", "Bike"];
+const OCC_COLORS = ["#ff3b4e", "#ffc53d", "#7c5cff", "#e8ecf5", "#ff6b35", "#3d7bff", "#ff3cac"];
+
+function displaySlots() {
+
+    const n = selectedParking.slots;
+    const mobile = window.innerWidth < 700;
+    const cols = mobile ? (n <= 15 ? 3 : 4) : (n <= 15 ? 5 : 8);
+
+    const list = $("slotList");
+
+    list.style.setProperty("--cols", cols);
+    list.style.setProperty("--rz", "0deg");
+
+    let html = "";
+
+    for (let i = 1; i <= n; i++) {
+
+        const occupied = i % 7 === 0;
+
+        let car = "";
+
+        if (occupied) {
+            const plate = "MH12 " + String.fromCharCode(65 + (i % 26)) + String.fromCharCode(65 + ((i * 3) % 26)) + " " + (1000 + ((i * 137) % 9000));
+            car = `<div class="vwrap">${vehicleHTML(OCC_TYPES[i % 3], OCC_COLORS[i % OCC_COLORS.length], plate)}</div>`;
+        }
+
+        html += `<div class="bay ${occupied ? "occ" : "free"}" data-slot="${i}">` +
+            `<span class="no">P-${i}</span>${occupied ? '<span class="tag">TAKEN</span>' : ""}${car}</div>`;
+    }
+
+    list.innerHTML = html;
+
+    updateSlotHud();
+}
+
+function updateSlotHud() {
+
+    const n = selectedParking.slots;
+    const occ = occupiedCount(n);
+
+    $("slotHud").innerHTML =
+        `<span class="pill g">🟢 Free: ${n - occ}</span>` +
+        `<span class="pill r">🔴 Taken: ${occ}</span>` +
+        `<span class="pill c">🎯 ${selectedSlot ? "Selected: P-" + selectedSlot : "Tap a green slot"}</span>`;
+}
+
+$("slotList").addEventListener("click", function (e) {
+
+    const bay = e.target.closest(".bay");
+
+    if (!bay) { return; }
+
+    if (bay.classList.contains("occ")) {
+        toast("That slot is already taken.", "warn");
+        return;
+    }
+
+    selectSlot(Number(bay.dataset.slot), bay);
+});
+
+
+/* =====================================================
+   SELECT SLOT
+===================================================== */
+
+function selectSlot(slotNumber, element) {
+
+    document.querySelectorAll("#slotList .bay.sel").forEach(function (b) { b.classList.remove("sel"); });
+    document.querySelectorAll("#slotList .vwrap.mine").forEach(function (v) { v.remove(); });
+
+    element.classList.add("sel");
+
+    element.insertAdjacentHTML(
+        "beforeend",
+        `<div class="vwrap mine">${vehicleHTML(vehicle.type, vehicle.color, vehicle.number)}</div>`
+    );
+
+    selectedSlot = slotNumber;
+
+    updateSlotHud();
+}
+
+
+/* =====================================================
+   DURATION
+===================================================== */
+
+function goToDuration() {
+
+    if (!selectedSlot) {
+        toast("Please select an available parking slot.", "warn");
+        return;
+    }
+
+    renderDurations();
+
+    showPage("durationPage");
+}
+
+function renderDurations() {
+
+    const options = [3, 5, 7, 12, 24];
+
+    $("durationGrid").innerHTML = options.map(function (hours, i) {
+
+        const price = selectedParking.type === "Free" ? "FREE" : "₹" + (selectedParking.fee * hours);
+
+        return `
+            <button class="dur-card glass tilt" style="--i:${i}" onclick="selectDuration(${hours})">
+                <div class="dur-ring" style="--p:${Math.round((hours / 24) * 100)}"><span>${hours}</span></div>
+                <span class="dur-unit">Hours</span>
+                <span class="dur-price">${price}</span>
+            </button>`;
+    }).join("");
+}
+
+function selectDuration(hours) {
+
+    selectedDuration = hours;
+
+    showPaymentPage();
+}
+
+
+/* =====================================================
+   FEE CALCULATION
+===================================================== */
+
+function calculateParkingFee() {
+
+    if (!selectedParking) { return 0; }
+
+    if (selectedParking.type === "Free") { return 0; }
+
+    return selectedParking.fee * selectedDuration;
+}
+
+
+/* =====================================================
+   PAYMENT PAGE
+===================================================== */
+
+function showPaymentPage() {
+
+    const amount = calculateParkingFee();
+
+    selectedPayment = "";
+
+    document.querySelectorAll(".pay-tile").forEach(function (b) { b.classList.remove("selected"); });
+
+    const coin = `<div class="coin-wrap"><div class="coin"><i>₹</i><i>₹</i><i></i></div></div>`;
+
+    if (amount === 0) {
+
+        $("paymentAmount").innerHTML = `
+            ${coin}
+            <h2>FREE PARKING</h2>
+            <p>Parking at this location is free.</p>
+            <h3>Amount: ₹0</h3>`;
+
+        $("paymentOptions").classList.add("hidden");
+        $("freeParkingBox").classList.remove("hidden");
+
+    } else {
+
+        $("paymentAmount").innerHTML = `
+            ${coin}
+            <h2>Parking Fee</h2>
+            <p>${esc(selectedParking.name)}</p>
+            <p>Rate: ₹${selectedParking.fee}/hour</p>
+            <p>Duration: ${selectedDuration} hours</p>
+            <h2>Total: ₹${amount}</h2>`;
+
+        $("paymentOptions").classList.remove("hidden");
+        $("freeParkingBox").classList.add("hidden");
+    }
+
+    showPage("paymentPage");
+}
+
+
+/* =====================================================
+   PAYMENT METHOD
+===================================================== */
+
+function selectPayment(method) {
+
+    selectedPayment = method;
+
+    document.querySelectorAll(".pay-tile").forEach(function (button) {
+        button.classList.toggle("selected", button.dataset.method === method);
+    });
+}
+
+
+/* =====================================================
+   PAID PAYMENT
+===================================================== */
+
+function confirmPayment() {
+
+    if (!selectedPayment) {
+        toast("Please select a payment method.", "warn");
+        return;
+    }
+
+    const btn = $("payBtn");
+    const amount = calculateParkingFee();
+
+    btn.disabled = true;
+    btn.textContent = "Processing...";
+
+    setTimeout(function () {
+
+        btn.disabled = false;
+        btn.textContent = "Confirm Payment";
+
+        toast("Payment of ₹" + amount + " successful!", "ok");
+
+        showConfirmation(amount);
+
+    }, 1200);
+}
+
+
+/* =====================================================
+   FREE PAYMENT
+===================================================== */
+
+function confirmFreeParking() {
+    showConfirmation(0);
+}
+
+
+/* =====================================================
+   BOOKING CONFIRMATION
+===================================================== */
+
+function showConfirmation(amount) {
+
+    const paymentText = amount === 0 ? "No Payment Required" : `${esc(selectedPayment)} - ₹${amount}`;
+
+    bookingId = "SP-" + Math.random().toString(36).slice(2, 8).toUpperCase();
+
+    const bars = Array.from({ length: 36 }, function (_, i) {
+        return `<i style="width:${1 + ((bookingId.charCodeAt(i % bookingId.length) + i) % 4)}px"></i>`;
+    }).join("");
+
+    $("confirmStage").innerHTML = vehicleHTML(vehicle.type, vehicle.color, vehicle.number);
+    $("confirmCam").style.setProperty("--sc", ((SCALE_BY_TYPE[vehicle.type] || 1.5) * 0.72).toFixed(2));
+
+    $("bookingDetails").innerHTML = `
+        <div class="tk-row"><span>Booking ID</span><b>${bookingId}</b></div>
+        <div class="tk-row"><span>Vehicle</span><b>${esc(vehicle.number)} - ${esc(vehicle.model)}</b></div>
+        <div class="tk-row"><span>Vehicle Type</span><b>${esc(vehicle.type)}</b></div>
+        <div class="tk-row"><span>Parking</span><b>${esc(selectedParking.name)}</b></div>
+        <div class="tk-row"><span>Parking Type</span><b>${esc(selectedParking.type)}</b></div>
+        <div class="tk-row"><span>Slot</span><b>P-${selectedSlot}</b></div>
+        <div class="tk-row"><span>Duration</span><b>${selectedDuration} hours</b></div>
+        <div class="tk-row"><span>Payment</span><b>${paymentText}</b></div>
+        <div class="tk-row"><span>Status</span><b style="color:var(--green)">Confirmed</b></div>
+        <div class="barcode">${bars}</div>`;
+
+    showPage("confirmationPage");
+
+    /* booking is done - back button should not return to payment */
+    pageHistory = [];
+
+    confetti();
+}
+
+function confetti() {
+
+    const colors = ["#00f5a0", "#00d9ff", "#ff3cac", "#ffc53d", "#7c5cff"];
+
+    for (let i = 0; i < 70; i++) {
+
+        const c = document.createElement("div");
+
+        c.className = "confetti";
+        c.style.left = Math.random() * 100 + "vw";
+        c.style.background = colors[i % colors.length];
+        c.style.setProperty("--dx", (Math.random() * 200 - 100) + "px");
+        c.style.animationDuration = (2.2 + Math.random() * 2) + "s";
+        c.style.animationDelay = (Math.random() * 0.6) + "s";
+
+        document.body.appendChild(c);
+
+        setTimeout(function () { c.remove(); }, 5200);
+    }
+}
+
+
+/* =====================================================
+   NAVIGATION (3D drive simulation)
+===================================================== */
+
+function goToNavigation() {
+
+    $("navigationText").innerHTML =
+        `Navigate to <strong>${esc(selectedParking.name)}</strong> at ${esc(selectedParking.address)}.<br>` +
+        `Your parking slot is <strong>P-${selectedSlot}</strong>. <small>(Drive view is a simulation.)</small>`;
+
+    createRoadScene($("navScene"), vehicle.type, vehicle.color, vehicle.number, true);
+
+    showPage("navigationPage");
+
+    startNavSim();
+}
+
+function startNavSim() {
+
+    stopNavSim();
+
+    let dist = 1.2;
+
+    $("navDist").textContent = dist.toFixed(2) + " km";
+    $("navStatus").textContent = "Driving...";
+    $("navSpeed").textContent = "40 km/h";
+
+    navTimer = setInterval(function () {
+
+        dist = Math.max(0, dist - 0.025);
+
+        $("navSpeed").textContent = Math.round(28 + Math.random() * 22) + " km/h";
+        $("navDist").textContent = dist.toFixed(2) + " km";
+
+        if (dist <= 0) {
+
+            $("navSpeed").textContent = "0 km/h";
+            $("navStatus").textContent = "Arrived at P-" + selectedSlot;
+            $("navScene").classList.add("arrived");
+
+            stopNavSim();
+
+            toast("🎉 You have arrived!", "ok");
+        }
+
+    }, 600);
+}
+
+function stopNavSim() {
+
+    if (navTimer) {
+        clearInterval(navTimer);
+        navTimer = null;
+    }
+}
+
+
+/* =====================================================
+   GOOGLE MAPS
+===================================================== */
+
+function openMaps() {
+
+    const place = encodeURIComponent(selectedParking.name + ", " + selectedParking.address);
+
+    let mapsURL;
+
+    if (currentLatitude !== null && currentLongitude !== null) {
+        mapsURL = `https://www.google.com/maps/dir/?api=1&origin=${currentLatitude},${currentLongitude}&destination=${place}`;
+    } else {
+        mapsURL = `https://www.google.com/maps/search/?api=1&query=${place}`;
+    }
+
+    window.open(mapsURL, "_blank", "noopener");
+}
+
+
+/* =====================================================
+   NEW SEARCH
+===================================================== */
+
+function newSearch() {
+
+    selectedParking = null;
+    selectedSlot = null;
+    selectedDuration = 0;
+    selectedPayment = "";
+
+    pageHistory = ["vehiclePage"];
+
+    showPage("locationPage", false);
+}
+
+
+/* =====================================================
+   INIT
+===================================================== */
+
+(function init() {
+
+    buildSkyline("skyFar", 26, 90, 230);
+    buildSkyline("skyNear", 22, 60, 170);
+
+    document.querySelectorAll(".mini[data-kind]").forEach(function (m) {
+        m.innerHTML = cityHTML(m.dataset.kind);
+    });
+
+    /* login screen hero: a random vehicle drives down the road */
+    const types = ["Car", "SUV", "Bike"];
+
+    createRoadScene(
+        $("heroScene"),
+        types[Math.floor(Math.random() * types.length)],
+        COLORS[Math.floor(Math.random() * COLORS.length)],
+        "SMART 01",
+        true
+    );
+
+    renderSteps(0);
+
+    /* restore session after refresh */
+    const session = load("smartparkSession", sessionStorage);
+
+    if (session && session.email) {
+        currentUser = session;
+        openApp();
+    }
+
+})();
