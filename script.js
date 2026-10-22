@@ -1,3 +1,6 @@
+const state = { vehicle: "Car", rate: 20, area: "City Area", hours: 1, slot: null, loc: null };
+const $ = id => document.getElementById(id);
+
 /* ---------- views ---------- */
 function show(id) {
   document.querySelectorAll(".view").forEach(v => v.classList.toggle("on", v.id === id));
