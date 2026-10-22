@@ -301,10 +301,7 @@ body:not(.auth-mode) .progress.show { display: flex; }
 .progress i { flex: 1; height: 4px; border-radius: 4px; background: rgba(255, 255, 255, 0.15); transition: background 0.3s; }
 .progress i.on { background: var(--accent); }
 
-/* hosted-page extras */
-:root { color-scheme: dark; box-sizing: border-box; padding-top: env(safe-area-inset-top, 0px); padding-bottom: env(safe-area-inset-bottom, 0px); }
-html { scroll-padding-top: env(safe-area-inset-top, 0px); }
-
+:root { color-scheme: dark; }
 </style>
 </head>
 <body class="auth-mode">
@@ -402,6 +399,7 @@ html { scroll-padding-top: env(safe-area-inset-top, 0px); }
 
 <main>
   <div class="progress" id="progress" aria-hidden="true"><i></i><i></i><i></i></div>
+
   <!-- Step 1: vehicle + area -->
   <section class="view" id="s1">
     <h2>Where are you headed?</h2>
@@ -497,7 +495,7 @@ html { scroll-padding-top: env(safe-area-inset-top, 0px); }
 
   const $ = id => document.getElementById(id);
 
-  /* ---------- safety check: all three files must be the same version ---------- */
+  /* ---------- safety check ---------- */
   const REQUIRED = [
     "top", "logout", "progress", "intro",
     "loginForm", "lEmail", "lPass", "lEmailErr", "lPassErr", "lMsg", "remember", "loginBtn", "demoFill", "forgot", "toSignup",
@@ -508,7 +506,7 @@ html { scroll-padding-top: env(safe-area-inset-top, 0px); }
   if (missing.length) {
     const bar = document.createElement("div");
     bar.style.cssText = "position:fixed;left:0;right:0;top:0;z-index:99;padding:14px;background:#ff6b7a;color:#14202b;font:600 14px system-ui;text-align:center";
-    bar.textContent = "Files out of sync. Upload index.html, style.css and script.js together, then hard refresh (Ctrl+Shift+R).";
+    bar.textContent = "Page is incomplete. Replace the whole index.html with the latest code, then hard refresh (Ctrl+Shift+R).";
     document.body.appendChild(bar);
     console.error("SmartPark: missing elements:", missing.join(", "));
     return;
@@ -813,7 +811,6 @@ html { scroll-padding-top: env(safe-area-inset-top, 0px); }
 
   show("login");
 })();
-
 </script>
 </body>
 </html>
