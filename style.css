@@ -280,3 +280,10 @@ body.auth-mode .bg-lines { opacity: 0.6; }
   .side-copy, .fine { display: none; }
   .auth-main { align-items: start; padding-top: 28px; }
 }
+
+/* ---------- current location ---------- */
+.locbtn { margin-top: 0; }
+.locbtn:disabled { opacity: 0.6; cursor: wait; }
+.loc-status { margin: 10px 0 0; font-size: 0.85rem; color: var(--mute); }
+.loc-status.ok { color: var(--free); }
+.loc-status.bad { color: var(--danger); }
