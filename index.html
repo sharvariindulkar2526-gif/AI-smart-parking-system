@@ -1,352 +1,157 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SmartPark 3D - Smart Parking Finder</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@600;700;800&family=Rajdhani:wght@500;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="style.css">
-    <link rel="stylesheet" href="theme.css">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>SmartPark</title>
+<style>
+  :root { --bg:#f3f5f7; --card:#fff; --ink:#14202b; --mute:#66737f; --line:#d9e0e6; --accent:#0a6cff; --free:#1f9d55; --busy:#c9d1d8; }
+  * { box-sizing:border-box; }
+  body { margin:0; font-family:system-ui,-apple-system,"Segoe UI",sans-serif; background:var(--bg); color:var(--ink); }
+  main { max-width:460px; margin:0 auto; padding:20px 16px 40px; }
+  h1 { font-size:1.5rem; margin:0 0 4px; }
+  p.sub { color:var(--mute); margin:0 0 20px; }
+  .step { display:none; }
+  .step.on { display:block; }
+  .card { background:var(--card); border:1px solid var(--line); border-radius:12px; padding:16px; margin-bottom:14px; }
+  label { display:block; font-weight:600; margin:0 0 8px; }
+  .opts { display:flex; flex-wrap:wrap; gap:8px; margin-bottom:4px; }
+  .opts button { flex:1 1 30%; padding:12px 8px; border:1.5px solid var(--line); background:#fff; border-radius:10px; font:inherit; cursor:pointer; }
+  .opts button.sel { border-color:var(--accent); background:#eaf2ff; color:var(--accent); font-weight:600; }
+  .grid { display:grid; grid-template-columns:repeat(4,1fr); gap:8px; }
+  .slot { padding:14px 0; border-radius:8px; border:1.5px solid var(--free); background:#fff; color:var(--free); font:inherit; font-weight:600; cursor:pointer; }
+  .slot:disabled { background:var(--busy); border-color:var(--busy); color:#7d8893; cursor:not-allowed; }
+  .slot.sel { background:var(--free); color:#fff; }
+  .go { width:100%; padding:14px; border:0; border-radius:10px; background:var(--accent); color:#fff; font:inherit; font-weight:600; cursor:pointer; }
+  .go:disabled { background:#a9c6f5; cursor:not-allowed; }
+  .back { background:none; border:0; color:var(--mute); font:inherit; cursor:pointer; padding:0; margin-bottom:12px; }
+  .row { display:flex; justify-content:space-between; padding:6px 0; }
+  .total { border-top:1px solid var(--line); margin-top:6px; padding-top:10px; font-weight:700; }
+  .legend { color:var(--mute); font-size:.85rem; margin-top:10px; }
+  :focus-visible { outline:3px solid #ffb300; outline-offset:2px; }
+</style>
 </head>
-
 <body>
+<main>
+  <h1>SmartPark</h1>
+  <p class="sub">Find a spot, book it, go.</p>
 
-<!-- ================= 3D BACKGROUND ================= -->
-<div id="bg" aria-hidden="true">
-    <div class="stars"></div>
-    <div class="orb o1"></div>
-    <div class="orb o2"></div>
-    <div class="sky-layer far" id="skyFar"></div>
-    <div class="sky-layer near" id="skyNear"></div>
-    <div class="floor"></div>
-    <div class="vignette"></div>
-</div>
-
-<div id="toasts" aria-live="polite"></div>
-
-
-<!-- ================= AUTH (LOGIN + SIGNUP) ================= -->
-<div id="authPage" class="auth-page">
-
-    <div class="auth-wrap">
-
-        <div class="hero">
-            <div class="road-scene" id="heroScene"></div>
-
-            <div class="hero-copy">
-                <h1>Park smarter.<br><span>Play the city.</span></h1>
-                <p>Pick a spot on a live 3D lot, drive in, and navigate - all in one game-style app.</p>
-                <div class="chips">
-                    <span>🚗 3D vehicles</span>
-                    <span>🅿️ Live slots</span>
-                    <span>🧭 Navigation</span>
-                </div>
-            </div>
-        </div>
-
-        <div class="auth-col">
-
-            <!-- LOGIN -->
-            <div id="loginPage" class="auth-box glass">
-
-                <div class="logo">🅿️ SmartPark</div>
-
-                <h2>Welcome Back</h2>
-                <p>Find and reserve your parking easily.</p>
-
-                <form id="loginForm" class="field">
-                    <input type="email" id="loginEmail" placeholder="Email" required autocomplete="email">
-                    <input type="password" id="loginPassword" placeholder="Password" required autocomplete="current-password">
-                    <button type="submit" class="btn block">Login</button>
-                </form>
-
-                <p class="switch-text">
-                    Don't have an account?
-                    <button type="button" class="link" onclick="showSignup()">Create Account</button>
-                </p>
-
-                <p class="demo">Demo Login: demo@smartpark.com / 123456</p>
-
-            </div>
-
-            <!-- SIGNUP -->
-            <div id="signupPage" class="auth-box glass hidden">
-
-                <div class="logo">🅿️ SmartPark</div>
-
-                <h2>Create Account</h2>
-
-                <form id="signupForm" class="field">
-                    <input type="text" id="signupName" placeholder="Full Name" required autocomplete="name">
-                    <input type="email" id="signupEmail" placeholder="Email" required autocomplete="email">
-                    <input type="password" id="signupPassword" placeholder="Password (minimum 6 characters)" required autocomplete="new-password">
-                    <button type="submit" class="btn block">Create Account</button>
-                </form>
-
-                <p class="switch-text">
-                    Already have an account?
-                    <button type="button" class="link" onclick="showLogin()">Login</button>
-                </p>
-
-            </div>
-
-        </div>
-
+  <!-- Step 1 -->
+  <section class="step on" id="s1">
+    <div class="card">
+      <label>Vehicle</label>
+      <div class="opts" data-key="vehicle">
+        <button data-v="Car" data-rate="20" class="sel">Car</button>
+        <button data-v="Bike" data-rate="10">Bike</button>
+        <button data-v="SUV" data-rate="30">SUV</button>
+      </div>
     </div>
-
-</div>
-
-
-<!-- ================= MAIN APP ================= -->
-<div id="appPage" class="hidden">
-
-    <header>
-        <div class="header-logo">🅿️ SmartPark</div>
-
-        <div class="steps" id="steps"></div>
-
-        <div class="header-right">
-            <span class="user-pill" id="userName"></span>
-            <button class="btn danger sm logout-btn" onclick="logout()">Logout</button>
-        </div>
-    </header>
-
-    <main>
-
-        <!-- ================= VEHICLE ================= -->
-        <section id="vehiclePage" class="page active">
-
-            <h1 class="page-title">Build Your Ride</h1>
-            <p class="sub">Enter your vehicle information and pick a color.</p>
-
-            <div class="vehicle-grid">
-
-                <div class="showroom">
-                    <div class="cam" id="showCam">
-                        <div class="turntable">
-                            <div class="platform"></div>
-                            <div id="showroomStage"></div>
-                        </div>
-                    </div>
-                    <div class="showroom-tag" id="showroomTag">🚗 Car</div>
-                </div>
-
-                <div class="form-card glass">
-
-                    <h3>Vehicle Details</h3>
-
-                    <div class="field">
-                        <input type="text" id="carNumber" placeholder="Vehicle Number (e.g. MH12AB1234)" maxlength="12" autocomplete="off" required>
-                        <input type="text" id="carModel" placeholder="Vehicle Model (e.g. Hyundai i20)" maxlength="40" autocomplete="off" required>
-                    </div>
-
-                    <input type="hidden" id="vehicleType" value="Car">
-
-                    <span class="lbl">Vehicle type</span>
-                    <div class="type-row">
-                        <button type="button" class="chip on" data-type="Car" onclick="setType('Car')">🚗 Car</button>
-                        <button type="button" class="chip" data-type="Bike" onclick="setType('Bike')">🏍️ Bike</button>
-                        <button type="button" class="chip" data-type="SUV" onclick="setType('SUV')">🚙 SUV</button>
-                    </div>
-
-                    <span class="lbl">Paint</span>
-                    <div class="color-row" id="colorRow"></div>
-
-                    <button class="btn block" onclick="saveVehicle()">Continue →</button>
-
-                </div>
-
-            </div>
-
-        </section>
-
-
-        <!-- ================= LOCATION ================= -->
-        <section id="locationPage" class="page">
-
-            <button class="btn ghost sm back" onclick="goBack()">← Back</button>
-
-            <h1 class="page-title">Select Location</h1>
-            <p class="sub">Choose where you want to find parking.</p>
-
-            <button class="btn blue current-location-btn" onclick="useCurrentLocation()">
-                📍 Use Current Location
-            </button>
-
-            <p id="currentLocationStatus"></p>
-
-            <div class="location-grid">
-
-                <button class="loc-card glass tilt" onclick="selectLocation('City')">
-                    <div class="mini" data-kind="City"></div>
-                    <span class="loc-name">City Area</span>
-                    <small>Downtown towers</small>
-                </button>
-
-                <button class="loc-card glass tilt" onclick="selectLocation('College')">
-                    <div class="mini" data-kind="College"></div>
-                    <span class="loc-name">College Area</span>
-                    <small>Campus &amp; clock tower</small>
-                </button>
-
-                <button class="loc-card glass tilt" onclick="selectLocation('Market')">
-                    <div class="mini" data-kind="Market"></div>
-                    <span class="loc-name">Market Area</span>
-                    <small>Busy bazaar stalls</small>
-                </button>
-
-                <button class="loc-card glass tilt" onclick="selectLocation('Mall')">
-                    <div class="mini" data-kind="Mall"></div>
-                    <span class="loc-name">Mall Area</span>
-                    <small>Shopping centre</small>
-                </button>
-
-            </div>
-
-        </section>
-
-
-        <!-- ================= PARKING ================= -->
-        <section id="parkingPage" class="page">
-
-            <button class="btn ghost sm back" onclick="goBack()">← Back</button>
-
-            <h1 class="page-title">Available Parking</h1>
-            <p class="sub" id="selectedLocationText"></p>
-
-            <div id="parkingList" class="parking-grid"></div>
-
-        </section>
-
-
-        <!-- ================= SLOT ================= -->
-        <section id="slotPage" class="page">
-
-            <button class="btn ghost sm back" onclick="goBack()">← Back</button>
-
-            <h1 class="page-title">Pick Your Slot</h1>
-            <p id="selectedParkingText"></p>
-
-            <div class="slot-hud" id="slotHud"></div>
-
-            <div class="lot-wrap" id="lotWrap">
-                <div id="slotList" class="lot"></div>
-            </div>
-
-            <div class="center">
-                <button class="btn" onclick="goToDuration()">Continue →</button>
-            </div>
-
-        </section>
-
-
-        <!-- ================= DURATION ================= -->
-        <section id="durationPage" class="page">
-
-            <button class="btn ghost sm back" onclick="goBack()">← Back</button>
-
-            <h1 class="page-title">Parking Duration</h1>
-            <p class="sub">Choose how long you want to park.</p>
-
-            <div class="duration-grid" id="durationGrid"></div>
-
-        </section>
-
-
-        <!-- ================= PAYMENT ================= -->
-        <section id="paymentPage" class="page">
-
-            <button class="btn ghost sm back" onclick="goBack()">← Back</button>
-
-            <h1 class="page-title">Payment</h1>
-            <p class="sub">Review your total and confirm.</p>
-
-            <div id="paymentAmount" class="payment-box glass"></div>
-
-            <div id="paymentOptions">
-
-                <h3>Select Payment Method</h3>
-
-                <div class="payment-methods">
-
-                    <button class="pay-tile glass tilt" data-method="UPI" onclick="selectPayment('UPI')">📱 UPI</button>
-                    <button class="pay-tile glass tilt" data-method="Card" onclick="selectPayment('Card')">💳 Card</button>
-                    <button class="pay-tile glass tilt" data-method="Cash" onclick="selectPayment('Cash')">💵 Cash</button>
-
-                </div>
-
-                <div class="center">
-                    <button class="btn" id="payBtn" onclick="confirmPayment()">Confirm Payment</button>
-                </div>
-
-            </div>
-
-            <div id="freeParkingBox" class="hidden">
-                <button class="btn" onclick="confirmFreeParking()">Confirm Free Parking</button>
-            </div>
-
-        </section>
-
-
-        <!-- ================= CONFIRMATION ================= -->
-        <section id="confirmationPage" class="page">
-
-            <div class="confirmation-box glass">
-
-                <div class="success-icon">✓</div>
-
-                <h1>Booking Confirmed!</h1>
-
-                <div class="confirm-car">
-                    <div class="cam" id="confirmCam">
-                        <div class="turntable">
-                            <div class="platform"></div>
-                            <div id="confirmStage"></div>
-                        </div>
-                    </div>
-                </div>
-
-                <div id="bookingDetails"></div>
-
-                <button class="btn" onclick="goToNavigation()">🧭 Start Navigation</button>
-
-            </div>
-
-        </section>
-
-
-        <!-- ================= NAVIGATION ================= -->
-        <section id="navigationPage" class="page">
-
-            <div class="navigation-box glass">
-
-                <div class="road-scene" id="navScene"></div>
-
-                <div class="nav-hud">
-                    <div class="hud-cell"><small>Speed</small><b id="navSpeed">0 km/h</b></div>
-                    <div class="hud-cell"><small>Distance</small><b id="navDist">--</b></div>
-                    <div class="hud-cell"><small>Status</small><b id="navStatus" style="font-size:14px">--</b></div>
-                </div>
-
-                <p id="navigationText"></p>
-
-                <div class="nav-btns">
-                    <button class="btn blue" onclick="openMaps()">🗺️ Open Google Maps</button>
-                    <button class="btn ghost" onclick="newSearch()">New Parking Search</button>
-                </div>
-
-            </div>
-
-        </section>
-
-    </main>
-
-</div>
-
-
-<script src="script.js"></script>
-
+    <div class="card">
+      <label>Area</label>
+      <div class="opts" data-key="area">
+        <button data-v="City Area" class="sel">City</button>
+        <button data-v="College Area">College</button>
+        <button data-v="Market Area">Market</button>
+        <button data-v="Mall Area">Mall</button>
+      </div>
+    </div>
+    <button class="go" id="to2">Find parking</button>
+  </section>
+
+  <!-- Step 2 -->
+  <section class="step" id="s2">
+    <button class="back" data-back="s1">← Back</button>
+    <div class="card">
+      <label id="areaTitle">Pick a slot</label>
+      <div class="grid" id="grid"></div>
+      <p class="legend">Green = free, grey = taken</p>
+    </div>
+    <button class="go" id="to3" disabled>Continue</button>
+  </section>
+
+  <!-- Step 3 -->
+  <section class="step" id="s3">
+    <button class="back" data-back="s2">← Back</button>
+    <div class="card">
+      <label>Hours</label>
+      <div class="opts" data-key="hours">
+        <button data-v="1" class="sel">1</button>
+        <button data-v="2">2</button>
+        <button data-v="3">3</button>
+        <button data-v="4">4</button>
+      </div>
+    </div>
+    <div class="card" id="summary"></div>
+    <button class="go" id="book">Confirm booking</button>
+  </section>
+
+  <!-- Step 4 -->
+  <section class="step" id="s4">
+    <div class="card">
+      <h1>Booked ✓</h1>
+      <div id="done"></div>
+    </div>
+    <a id="maps" target="_blank" rel="noopener"><button class="go" style="margin-bottom:10px">Open in Google Maps</button></a>
+    <button class="go" id="again" style="background:#fff;color:var(--accent);border:1.5px solid var(--accent)">New search</button>
+  </section>
+</main>
+
+<script>
+  const state = { vehicle:"Car", rate:20, area:"City Area", hours:1, slot:null };
+  const $ = id => document.getElementById(id);
+  const show = id => { document.querySelectorAll(".step").forEach(s => s.classList.toggle("on", s.id === id)); window.scrollTo(0,0); };
+
+  // option groups
+  document.querySelectorAll(".opts").forEach(group => {
+    group.addEventListener("click", e => {
+      const b = e.target.closest("button"); if (!b) return;
+      group.querySelectorAll("button").forEach(x => x.classList.remove("sel"));
+      b.classList.add("sel");
+      state[group.dataset.key] = b.dataset.v;
+      if (b.dataset.rate) state.rate = +b.dataset.rate;
+      if (group.dataset.key === "hours") renderSummary();
+    });
+  });
+
+  document.querySelectorAll("[data-back]").forEach(b => b.onclick = () => show(b.dataset.back));
+
+  // slots: random taken spots, 12 per area
+  function renderGrid() {
+    $("areaTitle").textContent = state.area + " - pick a slot";
+    state.slot = null; $("to3").disabled = true;
+    const grid = $("grid"); grid.innerHTML = "";
+    for (let i = 1; i <= 12; i++) {
+      const b = document.createElement("button");
+      b.className = "slot"; b.textContent = "P" + i;
+      if (Math.random() < 0.35) b.disabled = true;
+      b.onclick = () => {
+        grid.querySelectorAll(".slot").forEach(x => x.classList.remove("sel"));
+        b.classList.add("sel"); state.slot = "P" + i; $("to3").disabled = false;
+      };
+      grid.appendChild(b);
+    }
+  }
+
+  function total() { return state.rate * state.hours; }
+  function renderSummary() {
+    $("summary").innerHTML =
+      `<div class="row"><span>${state.vehicle} · ${state.area}</span><span>${state.slot}</span></div>
+       <div class="row"><span>₹${state.rate}/hour × ${state.hours}</span><span>₹${total()}</span></div>
+       <div class="row total"><span>Total</span><span>₹${total()}</span></div>`;
+  }
+
+  $("to2").onclick = () => { renderGrid(); show("s2"); };
+  $("to3").onclick = () => { renderSummary(); show("s3"); };
+  $("book").onclick = () => {
+    $("done").innerHTML =
+      `<div class="row"><span>Slot</span><b>${state.slot}</b></div>
+       <div class="row"><span>Area</span><b>${state.area}</b></div>
+       <div class="row"><span>Vehicle</span><b>${state.vehicle}</b></div>
+       <div class="row"><span>Paid</span><b>₹${total()}</b></div>`;
+    $("maps").href = "https://www.google.com/maps/search/?api=1&query=" + encodeURIComponent("parking " + state.area);
+    show("s4");
+  };
+  $("again").onclick = () => show("s1");
+</script>
 </body>
 </html>
