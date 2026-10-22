@@ -6,7 +6,7 @@
 <title>SmartPark</title>
 <link rel="stylesheet" href="style.css">
 </head>
-<body>
+<body class="auth-mode">
 <div class="bg-lines"></div>
 
 <header class="top" id="top" hidden>
@@ -14,46 +14,92 @@
   <button class="ghost" id="logout">Logout</button>
 </header>
 
+<div class="auth">
+  <aside class="auth-side">
+    <div class="brand"><span class="logo">P</span> SmartPark</div>
+    <div class="side-copy">
+      <h1>Parking, without the circling.</h1>
+      <p>See free slots live, reserve in seconds and head straight to your bay.</p>
+      <ul class="points">
+        <li>Live slot availability</li>
+        <li>Pay by UPI, card or cash</li>
+        <li>One-tap navigation</li>
+      </ul>
+    </div>
+    <p class="fine">&copy; 2026 SmartPark</p>
+  </aside>
+
+  <div class="auth-main">
+    <!-- Login -->
+    <section class="view on" id="login">
+      <form id="loginForm" class="auth-form" novalidate>
+        <h2>Welcome back</h2>
+        <p class="sub">Login to find and reserve parking.</p>
+
+        <div class="field">
+          <label for="lEmail">Email</label>
+          <input id="lEmail" name="email" type="email" placeholder="you@email.com" autocomplete="username" required>
+          <span class="field-err" id="lEmailErr"></span>
+        </div>
+
+        <div class="field">
+          <label for="lPass">Password</label>
+          <div class="pw">
+            <input id="lPass" name="password" type="password" placeholder="Your password" autocomplete="current-password" required>
+            <button type="button" class="eye" data-eye="lPass" aria-label="Show password">Show</button>
+          </div>
+          <span class="field-err" id="lPassErr"></span>
+        </div>
+
+        <div class="row-between">
+          <label class="check"><input type="checkbox" id="remember"> Remember me</label>
+          <a href="#" id="forgot" class="text-link">Forgot password?</a>
+        </div>
+
+        <p class="form-msg" id="lMsg" role="alert"></p>
+        <button class="primary" type="submit" id="loginBtn"><span class="btn-label">Login</span><span class="spinner"></span></button>
+        <button class="secondary" type="button" id="demoFill">Use demo account</button>
+        <p class="switch">New here? <a href="#" id="toSignup">Create account</a></p>
+      </form>
+    </section>
+
+    <!-- Signup -->
+    <section class="view" id="signup">
+      <form id="signupForm" class="auth-form" novalidate>
+        <h2>Create your account</h2>
+        <p class="sub">It takes less than a minute.</p>
+
+        <div class="field">
+          <label for="sName">Full name</label>
+          <input id="sName" type="text" placeholder="Your name" autocomplete="name" required>
+          <span class="field-err" id="sNameErr"></span>
+        </div>
+
+        <div class="field">
+          <label for="sEmail">Email</label>
+          <input id="sEmail" type="email" placeholder="you@email.com" autocomplete="username" required>
+          <span class="field-err" id="sEmailErr"></span>
+        </div>
+
+        <div class="field">
+          <label for="sPass">Password</label>
+          <div class="pw">
+            <input id="sPass" type="password" placeholder="At least 6 characters" autocomplete="new-password" required>
+            <button type="button" class="eye" data-eye="sPass" aria-label="Show password">Show</button>
+          </div>
+          <div class="meter"><i id="meterBar"></i></div>
+          <span class="field-err" id="sPassErr"></span>
+        </div>
+
+        <p class="form-msg" id="sMsg" role="alert"></p>
+        <button class="primary" type="submit" id="signupBtn"><span class="btn-label">Create account</span><span class="spinner"></span></button>
+        <p class="switch">Already registered? <a href="#" id="toLogin">Login</a></p>
+      </form>
+    </section>
+  </div>
+</div>
+
 <main>
-  <!-- Login -->
-  <section class="view on" id="login">
-    <div class="hero">
-      <span class="logo big">P</span>
-      <h1>Park smarter.</h1>
-      <p class="sub">Find a free spot, book it, and drive straight in.</p>
-    </div>
-    <div class="card">
-      <label for="lEmail">Email</label>
-      <input id="lEmail" type="email" placeholder="you@email.com" autocomplete="username">
-      <label for="lPass">Password</label>
-      <input id="lPass" type="password" placeholder="Password" autocomplete="current-password">
-      <p class="err" id="lErr"></p>
-      <button class="primary" id="loginBtn">Login</button>
-      <p class="switch">New here? <a href="#" id="toSignup">Create account</a></p>
-      <p class="demo">Demo: demo@smartpark.com / 123456</p>
-    </div>
-  </section>
-
-  <!-- Signup -->
-  <section class="view" id="signup">
-    <div class="hero">
-      <span class="logo big">P</span>
-      <h1>Create account</h1>
-      <p class="sub">It takes ten seconds.</p>
-    </div>
-    <div class="card">
-      <label for="sName">Name</label>
-      <input id="sName" type="text" placeholder="Your name" autocomplete="name">
-      <label for="sEmail">Email</label>
-      <input id="sEmail" type="email" placeholder="you@email.com" autocomplete="username">
-      <label for="sPass">Password</label>
-      <input id="sPass" type="password" placeholder="Min 4 characters" autocomplete="new-password">
-      <p class="err" id="sErr"></p>
-      <button class="primary" id="signupBtn">Create account</button>
-      <p class="switch">Have an account? <a href="#" id="toLogin">Login</a></p>
-    </div>
-  </section>
-
   <!-- Step 1: vehicle + area -->
   <section class="view" id="s1">
     <h2>Where are you headed?</h2>
