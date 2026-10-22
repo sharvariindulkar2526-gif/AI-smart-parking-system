@@ -3,96 +3,95 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SmartPark - Smart Parking Finder</title>
+    <title>SmartPark 3D - Smart Parking Finder</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@600;700;800&family=Rajdhani:wght@500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="style.css">
 </head>
 
 <body>
 
-<!-- ================= LOGIN ================= -->
-<div id="loginPage" class="auth-page">
-
-    <div class="auth-box">
-
-        <div class="logo">🅿️ SmartPark</div>
-
-        <h2>Welcome Back</h2>
-        <p>Find and reserve your parking easily.</p>
-
-        <form id="loginForm">
-
-            <input
-                type="email"
-                id="loginEmail"
-                placeholder="Email"
-                required
-            >
-
-            <input
-                type="password"
-                id="loginPassword"
-                placeholder="Password"
-                required
-            >
-
-            <button type="submit">Login</button>
-
-        </form>
-
-        <p class="switch-text">
-            Don't have an account?
-            <span onclick="showSignup()">Create Account</span>
-        </p>
-
-        <p class="demo">
-            Demo Login: demo@smartpark.com / 123456
-        </p>
-
-    </div>
-
+<!-- ================= 3D BACKGROUND ================= -->
+<div id="bg" aria-hidden="true">
+    <div class="stars"></div>
+    <div class="orb o1"></div>
+    <div class="orb o2"></div>
+    <div class="sky-layer far" id="skyFar"></div>
+    <div class="sky-layer near" id="skyNear"></div>
+    <div class="floor"></div>
+    <div class="vignette"></div>
 </div>
 
+<div id="toasts" aria-live="polite"></div>
 
-<!-- ================= SIGNUP ================= -->
-<div id="signupPage" class="auth-page hidden">
 
-    <div class="auth-box">
+<!-- ================= AUTH (LOGIN + SIGNUP) ================= -->
+<div id="authPage" class="auth-page">
 
-        <div class="logo">🅿️ SmartPark</div>
+    <div class="auth-wrap">
 
-        <h2>Create Account</h2>
+        <div class="hero">
+            <div class="road-scene" id="heroScene"></div>
 
-        <form id="signupForm">
+            <div class="hero-copy">
+                <h1>Park smarter.<br><span>Play the city.</span></h1>
+                <p>Pick a spot on a live 3D lot, drive in, and navigate - all in one game-style app.</p>
+                <div class="chips">
+                    <span>🚗 3D vehicles</span>
+                    <span>🅿️ Live slots</span>
+                    <span>🧭 Navigation</span>
+                </div>
+            </div>
+        </div>
 
-            <input
-                type="text"
-                id="signupName"
-                placeholder="Full Name"
-                required
-            >
+        <div class="auth-col">
 
-            <input
-                type="email"
-                id="signupEmail"
-                placeholder="Email"
-                required
-            >
+            <!-- LOGIN -->
+            <div id="loginPage" class="auth-box glass">
 
-            <input
-                type="password"
-                id="signupPassword"
-                placeholder="Password (minimum 6 characters)"
-                required
-            >
+                <div class="logo">🅿️ SmartPark</div>
 
-            <button type="submit">Create Account</button>
+                <h2>Welcome Back</h2>
+                <p>Find and reserve your parking easily.</p>
 
-        </form>
+                <form id="loginForm" class="field">
+                    <input type="email" id="loginEmail" placeholder="Email" required autocomplete="email">
+                    <input type="password" id="loginPassword" placeholder="Password" required autocomplete="current-password">
+                    <button type="submit" class="btn block">Login</button>
+                </form>
 
-        <p class="switch-text">
-            Already have an account?
-            <span onclick="showLogin()">Login</span>
-        </p>
+                <p class="switch-text">
+                    Don't have an account?
+                    <button type="button" class="link" onclick="showSignup()">Create Account</button>
+                </p>
+
+                <p class="demo">Demo Login: demo@smartpark.com / 123456</p>
+
+            </div>
+
+            <!-- SIGNUP -->
+            <div id="signupPage" class="auth-box glass hidden">
+
+                <div class="logo">🅿️ SmartPark</div>
+
+                <h2>Create Account</h2>
+
+                <form id="signupForm" class="field">
+                    <input type="text" id="signupName" placeholder="Full Name" required autocomplete="name">
+                    <input type="email" id="signupEmail" placeholder="Email" required autocomplete="email">
+                    <input type="password" id="signupPassword" placeholder="Password (minimum 6 characters)" required autocomplete="new-password">
+                    <button type="submit" class="btn block">Create Account</button>
+                </form>
+
+                <p class="switch-text">
+                    Already have an account?
+                    <button type="button" class="link" onclick="showLogin()">Login</button>
+                </p>
+
+            </div>
+
+        </div>
 
     </div>
 
@@ -103,214 +102,167 @@
 <div id="appPage" class="hidden">
 
     <header>
+        <div class="header-logo">🅿️ SmartPark</div>
 
-        <div class="header-logo">
-            🅿️ SmartPark
+        <div class="steps" id="steps"></div>
+
+        <div class="header-right">
+            <span class="user-pill" id="userName"></span>
+            <button class="btn danger sm logout-btn" onclick="logout()">Logout</button>
         </div>
-
-        <button class="logout-btn" onclick="logout()">
-            Logout
-        </button>
-
     </header>
 
+    <main>
 
-    <!-- ================= VEHICLE ================= -->
-    <section id="vehiclePage" class="page active">
+        <!-- ================= VEHICLE ================= -->
+        <section id="vehiclePage" class="page active">
 
-        <div class="container">
+            <h1 class="page-title">Build Your Ride</h1>
+            <p class="sub">Enter your vehicle information and pick a color.</p>
 
-            <h1>Vehicle Details</h1>
+            <div class="vehicle-grid">
 
-            <p>Enter your vehicle information.</p>
+                <div class="showroom">
+                    <div class="cam" id="showCam">
+                        <div class="turntable">
+                            <div class="platform"></div>
+                            <div id="showroomStage"></div>
+                        </div>
+                    </div>
+                    <div class="showroom-tag" id="showroomTag">🚗 Car</div>
+                </div>
 
-            <div class="form-card">
+                <div class="form-card glass">
 
-                <input
-                    type="text"
-                    id="carNumber"
-                    placeholder="Vehicle Number (e.g. MH12AB1234)"
-                    required
-                >
+                    <h3>Vehicle Details</h3>
 
-                <input
-                    type="text"
-                    id="carModel"
-                    placeholder="Vehicle Model (e.g. Hyundai i20)"
-                    required
-                >
+                    <div class="field">
+                        <input type="text" id="carNumber" placeholder="Vehicle Number (e.g. MH12AB1234)" maxlength="12" autocomplete="off" required>
+                        <input type="text" id="carModel" placeholder="Vehicle Model (e.g. Hyundai i20)" maxlength="40" autocomplete="off" required>
+                    </div>
 
-                <select id="vehicleType">
+                    <input type="hidden" id="vehicleType" value="Car">
 
-                    <option value="">
-                        Select Vehicle Type
-                    </option>
+                    <span class="lbl">Vehicle type</span>
+                    <div class="type-row">
+                        <button type="button" class="chip on" data-type="Car" onclick="setType('Car')">🚗 Car</button>
+                        <button type="button" class="chip" data-type="Bike" onclick="setType('Bike')">🏍️ Bike</button>
+                        <button type="button" class="chip" data-type="SUV" onclick="setType('SUV')">🚙 SUV</button>
+                    </div>
 
-                    <option value="Car">
-                        Car
-                    </option>
+                    <span class="lbl">Paint</span>
+                    <div class="color-row" id="colorRow"></div>
 
-                    <option value="Bike">
-                        Bike
-                    </option>
+                    <button class="btn block" onclick="saveVehicle()">Continue →</button>
 
-                    <option value="SUV">
-                        SUV
-                    </option>
-
-                </select>
-
-                <button onclick="saveVehicle()">
-                    Continue
-                </button>
+                </div>
 
             </div>
 
-        </div>
-
-    </section>
+        </section>
 
 
-    <!-- ================= LOCATION ================= -->
-    <section id="locationPage" class="page">
+        <!-- ================= LOCATION ================= -->
+        <section id="locationPage" class="page">
 
-        <div class="container">
+            <button class="btn ghost sm back" onclick="goBack()">← Back</button>
 
-            <h1>Select Location</h1>
+            <h1 class="page-title">Select Location</h1>
+            <p class="sub">Choose where you want to find parking.</p>
 
-            <p>
-                Choose where you want to find parking.
-            </p>
-
-            <button
-                class="current-location-btn"
-                onclick="useCurrentLocation()"
-            >
+            <button class="btn blue current-location-btn" onclick="useCurrentLocation()">
                 📍 Use Current Location
             </button>
 
             <p id="currentLocationStatus"></p>
 
+            <div class="location-grid">
 
-            <div class="location-buttons">
-
-                <button onclick="selectLocation('City')">
-                    📍 City Area
+                <button class="loc-card glass tilt" onclick="selectLocation('City')">
+                    <div class="mini" data-kind="City"></div>
+                    <span class="loc-name">City Area</span>
+                    <small>Downtown towers</small>
                 </button>
 
-                <button onclick="selectLocation('College')">
-                    🎓 College Area
+                <button class="loc-card glass tilt" onclick="selectLocation('College')">
+                    <div class="mini" data-kind="College"></div>
+                    <span class="loc-name">College Area</span>
+                    <small>Campus &amp; clock tower</small>
                 </button>
 
-                <button onclick="selectLocation('Market')">
-                    🛍️ Market Area
+                <button class="loc-card glass tilt" onclick="selectLocation('Market')">
+                    <div class="mini" data-kind="Market"></div>
+                    <span class="loc-name">Market Area</span>
+                    <small>Busy bazaar stalls</small>
                 </button>
 
-                <button onclick="selectLocation('Mall')">
-                    🏢 Mall Area
+                <button class="loc-card glass tilt" onclick="selectLocation('Mall')">
+                    <div class="mini" data-kind="Mall"></div>
+                    <span class="loc-name">Mall Area</span>
+                    <small>Shopping centre</small>
                 </button>
 
             </div>
 
-        </div>
-
-    </section>
+        </section>
 
 
-    <!-- ================= PARKING ================= -->
-    <section id="parkingPage" class="page">
+        <!-- ================= PARKING ================= -->
+        <section id="parkingPage" class="page">
 
-        <div class="container">
+            <button class="btn ghost sm back" onclick="goBack()">← Back</button>
 
-            <h1>Available Parking</h1>
+            <h1 class="page-title">Available Parking</h1>
+            <p class="sub" id="selectedLocationText"></p>
 
-            <p id="selectedLocationText"></p>
+            <div id="parkingList" class="parking-grid"></div>
 
-            <div
-                id="parkingList"
-                class="parking-grid"
-            ></div>
-
-        </div>
-
-    </section>
+        </section>
 
 
-    <!-- ================= SLOT ================= -->
-    <section id="slotPage" class="page">
+        <!-- ================= SLOT ================= -->
+        <section id="slotPage" class="page">
 
-        <div class="container">
+            <button class="btn ghost sm back" onclick="goBack()">← Back</button>
 
-            <h1>Select Parking Slot</h1>
-
+            <h1 class="page-title">Pick Your Slot</h1>
             <p id="selectedParkingText"></p>
 
-            <div
-                id="slotList"
-                class="slot-grid"
-            ></div>
+            <div class="slot-hud" id="slotHud"></div>
 
-            <button onclick="goToDuration()">
-                Continue
-            </button>
-
-        </div>
-
-    </section>
-
-
-    <!-- ================= DURATION ================= -->
-    <section id="durationPage" class="page">
-
-        <div class="container">
-
-            <h1>Select Parking Duration</h1>
-
-            <p>
-                Choose how long you want to park.
-            </p>
-
-            <div class="duration-grid">
-
-                <button onclick="selectDuration(3)">
-                    3 Hours
-                </button>
-
-                <button onclick="selectDuration(5)">
-                    5 Hours
-                </button>
-
-                <button onclick="selectDuration(7)">
-                    7 Hours
-                </button>
-
-                <button onclick="selectDuration(12)">
-                    12 Hours
-                </button>
-
-                <button onclick="selectDuration(24)">
-                    24 Hours
-                </button>
-
+            <div class="lot-wrap" id="lotWrap">
+                <div id="slotList" class="lot"></div>
             </div>
 
-        </div>
+            <div class="center">
+                <button class="btn" onclick="goToDuration()">Continue →</button>
+            </div>
 
-    </section>
+        </section>
 
 
-    <!-- ================= PAYMENT ================= -->
-    <section id="paymentPage" class="page">
+        <!-- ================= DURATION ================= -->
+        <section id="durationPage" class="page">
 
-        <div class="container">
+            <button class="btn ghost sm back" onclick="goBack()">← Back</button>
 
-            <h1>Payment</h1>
+            <h1 class="page-title">Parking Duration</h1>
+            <p class="sub">Choose how long you want to park.</p>
 
-            <div
-                id="paymentAmount"
-                class="payment-box"
-            ></div>
+            <div class="duration-grid" id="durationGrid"></div>
 
+        </section>
+
+
+        <!-- ================= PAYMENT ================= -->
+        <section id="paymentPage" class="page">
+
+            <button class="btn ghost sm back" onclick="goBack()">← Back</button>
+
+            <h1 class="page-title">Payment</h1>
+            <p class="sub">Review your total and confirm.</p>
+
+            <div id="paymentAmount" class="payment-box glass"></div>
 
             <div id="paymentOptions">
 
@@ -318,111 +270,77 @@
 
                 <div class="payment-methods">
 
-                    <button onclick="selectPayment('UPI')">
-                        📱 UPI
-                    </button>
-
-                    <button onclick="selectPayment('Card')">
-                        💳 Card
-                    </button>
-
-                    <button onclick="selectPayment('Cash')">
-                        💵 Cash
-                    </button>
+                    <button class="pay-tile glass tilt" data-method="UPI" onclick="selectPayment('UPI')">📱 UPI</button>
+                    <button class="pay-tile glass tilt" data-method="Card" onclick="selectPayment('Card')">💳 Card</button>
+                    <button class="pay-tile glass tilt" data-method="Cash" onclick="selectPayment('Cash')">💵 Cash</button>
 
                 </div>
 
-                <button onclick="confirmPayment()">
-                    Confirm Payment
-                </button>
-
-            </div>
-
-
-            <div
-                id="freeParkingBox"
-                class="hidden"
-            >
-
-                <button onclick="confirmFreeParking()">
-                    Confirm Free Parking
-                </button>
-
-            </div>
-
-        </div>
-
-    </section>
-
-
-    <!-- ================= CONFIRMATION ================= -->
-    <section id="confirmationPage" class="page">
-
-        <div class="container">
-
-            <div class="confirmation-box">
-
-                <div class="success-icon">
-                    ✓
+                <div class="center">
+                    <button class="btn" id="payBtn" onclick="confirmPayment()">Confirm Payment</button>
                 </div>
 
-                <h1>
-                    Booking Confirmed!
-                </h1>
+            </div>
+
+            <div id="freeParkingBox" class="hidden">
+                <button class="btn" onclick="confirmFreeParking()">Confirm Free Parking</button>
+            </div>
+
+        </section>
+
+
+        <!-- ================= CONFIRMATION ================= -->
+        <section id="confirmationPage" class="page">
+
+            <div class="confirmation-box glass">
+
+                <div class="success-icon">✓</div>
+
+                <h1>Booking Confirmed!</h1>
+
+                <div class="confirm-car">
+                    <div class="cam" id="confirmCam">
+                        <div class="turntable">
+                            <div class="platform"></div>
+                            <div id="confirmStage"></div>
+                        </div>
+                    </div>
+                </div>
 
                 <div id="bookingDetails"></div>
 
-                <button onclick="goToNavigation()">
-                    🧭 Start Navigation
-                </button>
+                <button class="btn" onclick="goToNavigation()">🧭 Start Navigation</button>
 
             </div>
 
-        </div>
-
-    </section>
+        </section>
 
 
-    <!-- ================= NAVIGATION ================= -->
-    <section id="navigationPage" class="page">
+        <!-- ================= NAVIGATION ================= -->
+        <section id="navigationPage" class="page">
 
-        <div class="container">
+            <div class="navigation-box glass">
 
-            <div class="navigation-box">
+                <div class="road-scene" id="navScene"></div>
 
-                <div class="navigation-icon">
-                    🧭
+                <div class="nav-hud">
+                    <div class="hud-cell"><small>Speed</small><b id="navSpeed">0 km/h</b></div>
+                    <div class="hud-cell"><small>Distance</small><b id="navDist">--</b></div>
+                    <div class="hud-cell"><small>Status</small><b id="navStatus" style="font-size:14px">--</b></div>
                 </div>
-
-                <h1>
-                    Navigation
-                </h1>
 
                 <p id="navigationText"></p>
 
-                <div class="route">
-
-                    📍 Your Location
-
-                    <span>↓</span>
-
-                    🅿️ Parking Location
-
+                <div class="nav-btns">
+                    <button class="btn blue" onclick="openMaps()">🗺️ Open Google Maps</button>
+                    <button class="btn ghost" onclick="newSearch()">New Parking Search</button>
                 </div>
-
-                <button onclick="openMaps()">
-                    🗺️ Open Google Maps
-                </button>
-
-                <button onclick="newSearch()">
-                    New Parking Search
-                </button>
 
             </div>
 
-        </div>
+        </section>
 
-    </section>
+    </main>
 
 </div>
 
