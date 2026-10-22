@@ -1,11 +1,10 @@
 <!DOCTYPE html>
-<html lang="en"><!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>SmartPark</title>
-<link rel="stylesheet" href="style.css">
+<link rel="stylesheet" href="style.css?v=4">
 </head>
 <body class="auth-mode">
 <div class="bg-lines"></div>
@@ -101,6 +100,7 @@
 </div>
 
 <main>
+  <div class="progress" id="progress" aria-hidden="true"><i></i><i></i><i></i></div>
   <!-- Step 1: vehicle + area -->
   <section class="view" id="s1">
     <h2>Where are you headed?</h2>
@@ -137,7 +137,8 @@
       <div class="lot" id="grid"></div>
       <p class="legend"><i class="dot free"></i> Free <i class="dot taken"></i> Taken</p>
     </div>
-    <button class="primary" id="to3" disabled>Continue</button>
+    <p class="form-msg" id="slotHint" role="alert"></p>
+    <button class="primary" id="to3">Continue</button>
   </section>
 
   <!-- Step 3: hours + confirm -->
@@ -189,197 +190,6 @@
   </svg>
 </div>
 
-<script src="script.js"></script>
-</body>
-</html>
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>SmartPark</title>
-<link rel="stylesheet" href="style.css">
-</head>
-<body class="auth-mode">
-<div class="bg-lines"></div>
-
-<header class="top" id="top" hidden>
-  <div class="brand"><span class="logo">P</span> SmartPark</div>
-  <button class="ghost" id="logout">Logout</button>
-</header>
-
-<div class="auth">
-  <aside class="auth-side">
-    <div class="brand"><span class="logo">P</span> SmartPark</div>
-    <div class="side-copy">
-      <h1>Parking, without the circling.</h1>
-      <p>See free slots live, reserve in seconds and head straight to your bay.</p>
-      <ul class="points">
-        <li>Live slot availability</li>
-        <li>Pay by UPI, card or cash</li>
-        <li>One-tap navigation</li>
-      </ul>
-    </div>
-    <p class="fine">&copy; 2026 SmartPark</p>
-  </aside>
-
-  <div class="auth-main">
-    <!-- Login -->
-    <section class="view on" id="login">
-      <form id="loginForm" class="auth-form" novalidate>
-        <h2>Welcome back</h2>
-        <p class="sub">Login to find and reserve parking.</p>
-
-        <div class="field">
-          <label for="lEmail">Email</label>
-          <input id="lEmail" name="email" type="email" placeholder="you@email.com" autocomplete="username" required>
-          <span class="field-err" id="lEmailErr"></span>
-        </div>
-
-        <div class="field">
-          <label for="lPass">Password</label>
-          <div class="pw">
-            <input id="lPass" name="password" type="password" placeholder="Your password" autocomplete="current-password" required>
-            <button type="button" class="eye" data-eye="lPass" aria-label="Show password">Show</button>
-          </div>
-          <span class="field-err" id="lPassErr"></span>
-        </div>
-
-        <div class="row-between">
-          <label class="check"><input type="checkbox" id="remember"> Remember me</label>
-          <a href="#" id="forgot" class="text-link">Forgot password?</a>
-        </div>
-
-        <p class="form-msg" id="lMsg" role="alert"></p>
-        <button class="primary" type="submit" id="loginBtn"><span class="btn-label">Login</span><span class="spinner"></span></button>
-        <button class="secondary" type="button" id="demoFill">Use demo account</button>
-        <p class="switch">New here? <a href="#" id="toSignup">Create account</a></p>
-      </form>
-    </section>
-
-    <!-- Signup -->
-    <section class="view" id="signup">
-      <form id="signupForm" class="auth-form" novalidate>
-        <h2>Create your account</h2>
-        <p class="sub">It takes less than a minute.</p>
-
-        <div class="field">
-          <label for="sName">Full name</label>
-          <input id="sName" type="text" placeholder="Your name" autocomplete="name" required>
-          <span class="field-err" id="sNameErr"></span>
-        </div>
-
-        <div class="field">
-          <label for="sEmail">Email</label>
-          <input id="sEmail" type="email" placeholder="you@email.com" autocomplete="username" required>
-          <span class="field-err" id="sEmailErr"></span>
-        </div>
-
-        <div class="field">
-          <label for="sPass">Password</label>
-          <div class="pw">
-            <input id="sPass" type="password" placeholder="At least 6 characters" autocomplete="new-password" required>
-            <button type="button" class="eye" data-eye="sPass" aria-label="Show password">Show</button>
-          </div>
-          <div class="meter"><i id="meterBar"></i></div>
-          <span class="field-err" id="sPassErr"></span>
-        </div>
-
-        <p class="form-msg" id="sMsg" role="alert"></p>
-        <button class="primary" type="submit" id="signupBtn"><span class="btn-label">Create account</span><span class="spinner"></span></button>
-        <p class="switch">Already registered? <a href="#" id="toLogin">Login</a></p>
-      </form>
-    </section>
-  </div>
-</div>
-
-<main>
-  <!-- Step 1: vehicle + area -->
-  <section class="view" id="s1">
-    <h2>Where are you headed?</h2>
-    <div class="card">
-      <label>Vehicle</label>
-      <div class="opts" data-key="vehicle">
-        <button data-v="Car" data-rate="20" class="sel">🚗 Car</button>
-        <button data-v="Bike" data-rate="10">🏍️ Bike</button>
-        <button data-v="SUV" data-rate="30">🚙 SUV</button>
-      </div>
-    </div>
-    <div class="card">
-      <label>Area</label>
-      <div class="opts two" data-key="area">
-        <button data-v="City Area" class="sel">City<small>Downtown towers</small></button>
-        <button data-v="College Area">College<small>Campus</small></button>
-        <button data-v="Market Area">Market<small>Busy bazaar</small></button>
-        <button data-v="Mall Area">Mall<small>Shopping centre</small></button>
-      </div>
-    </div>
-    <div class="card">
-      <label>Your location</label>
-      <button class="secondary locbtn" type="button" id="locBtn">📍 Use my current location</button>
-      <p class="loc-status" id="locStatus">Optional. Used to give you directions to the parking.</p>
-    </div>
-    <button class="primary" id="to2">Find parking</button>
-  </section>
-
-  <!-- Step 2: slot -->
-  <section class="view" id="s2">
-    <button class="back" data-back="s1">← Back</button>
-    <h2 id="areaTitle">Pick a slot</h2>
-    <div class="card">
-      <div class="lot" id="grid"></div>
-      <p class="legend"><i class="dot free"></i> Free <i class="dot taken"></i> Taken</p>
-    </div>
-    <button class="primary" id="to3" disabled>Continue</button>
-  </section>
-
-  <!-- Step 3: hours + confirm -->
-  <section class="view" id="s3">
-    <button class="back" data-back="s2">← Back</button>
-    <h2>How long?</h2>
-    <div class="card">
-      <label>Hours</label>
-      <div class="opts" data-key="hours">
-        <button data-v="1" class="sel">1</button>
-        <button data-v="2">2</button>
-        <button data-v="3">3</button>
-        <button data-v="4">4</button>
-      </div>
-    </div>
-    <div class="card" id="summary"></div>
-    <button class="primary" id="book">Confirm booking</button>
-  </section>
-
-  <!-- Step 4: done -->
-  <section class="view" id="s4">
-    <div class="done-mark">✓</div>
-    <h2 class="center">Booking confirmed</h2>
-    <div class="card" id="done"></div>
-    <a id="maps" target="_blank" rel="noopener" class="primary link">Open in Google Maps</a>
-    <button class="secondary" id="again">New search</button>
-  </section>
-</main>
-
-<!-- Car intro after login -->
-<div class="intro" id="intro" hidden>
-  <p class="intro-text">Finding your spot…</p>
-  <div class="road"><div class="dashes"></div></div>
-  <svg class="car" viewBox="0 0 290 90" aria-hidden="true">
-    <defs>
-      <linearGradient id="beam" x1="0" x2="1">
-        <stop offset="0" stop-color="#ffe27a" stop-opacity=".55"/>
-        <stop offset="1" stop-color="#ffe27a" stop-opacity="0"/>
-      </linearGradient>
-    </defs>
-    <polygon points="208,48 290,28 290,70" fill="url(#beam)"/>
-    <path d="M8 62 V50 Q8 44 16 42 L48 36 L68 14 Q72 10 80 10 H138 Q146 10 150 15 L170 36 L198 42 Q212 45 212 54 V62 Z" fill="#3ddcff"/>
-    <path d="M56 36 L72 17 H100 V36 Z" fill="#0f1b2a" opacity=".85"/>
-    <path d="M106 36 V17 H136 Q141 17 144 21 L158 36 Z" fill="#0f1b2a" opacity=".85"/>
-    <rect x="8" y="46" width="6" height="8" rx="2" fill="#ff4d5e"/>
-    <ellipse cx="207" cy="50" rx="5" ry="4" fill="#ffe27a"/>
-    <g class="wheel" style="transform-origin:56px 64px"><circle cx="56" cy="64" r="16" fill="#0b121b"/><circle cx="56" cy="64" r="7" fill="#aab8c5"/><line x1="56" y1="57" x2="56" y2="71" stroke="#0b121b" stroke-width="2"/></g>
-    <g class="wheel" style="transform-origin:166px 64px"><circle cx="166" cy="64" r="16" fill="#0b121b"/><circle cx="166" cy="64" r="7" fill="#aab8c5"/><line x1="166" y1="57" x2="166" y2="71" stroke="#0b121b" stroke-width="2"/></g>
-  </svg>
-</div>
-
-<script src="script.js"></script>
+<script src="script.js?v=4"></script>
 </body>
 </html>
