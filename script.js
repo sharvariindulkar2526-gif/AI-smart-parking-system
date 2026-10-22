@@ -1124,3 +1124,42 @@ function newSearch() {
     }
 
 })();
+
+
+/* SmartPark - welcome animation after login (loads AFTER script.js) */
+(function () {
+
+    const realOpenApp = openApp;
+
+    openApp = function () {
+
+        /* open the app underneath right away */
+        realOpenApp();
+
+        const saved = load("smartparkVehicle") || {};
+        const type = saved.type || ["Car", "SUV", "Bike"][Math.floor(Math.random() * 3)];
+        const color = saved.color || COLORS[Math.floor(Math.random() * COLORS.length)];
+
+        const ov = document.createElement("div");
+        ov.id = "welcome";
+        ov.innerHTML =
+            `<div class="road-scene" id="welcomeScene"></div>` +
+            `<div class="w-text"><h1>Welcome, ${esc(currentUser.name)}!</h1>` +
+            `<p>🚗 Start your engine - let's find you a spot</p></div>`;
+        document.body.appendChild(ov);
+
+        createRoadScene($("welcomeScene"), type, color, saved.number || "WELCOME", true);
+
+        let done = false;
+        function finish() {
+            if (done) { return; }
+            done = true;
+            ov.classList.add("leaving");          /* zoom out = website opens */
+            setTimeout(function () { ov.remove(); }, 950);
+        }
+
+        ov.addEventListener("click", finish);     /* tap to skip */
+        setTimeout(finish, 3600);
+    };
+
+})();
